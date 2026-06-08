@@ -35,6 +35,77 @@
     return data;
   }
 
+  // ---------- catálogo real del backend (para resolver SKUs correctos) ----------
+  let _catalogBySku = {};
+  let _catalogByName = {};
+  let _catalogLoaded = false;
+
+  const normName = (s) =>
+    String(s || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '') // quita acentos
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+
+  async function loadCatalog() {
+    try {
+      const r = await api('/products?limit=100', { auth: false });
+      _catalogBySku = {};
+      _catalogByName = {};
+      (r.data || []).forEach((p) => {
+        if (p.sku) _catalogBySku[p.sku] = p;
+        if (p.name) _catalogByName[normName(p.name)] = p;
+      });
+      _catalogLoaded = true;
+    } catch (e) {
+      console.warn('No se pudo cargar el catálogo:', e.message);
+    }
+  }
+  async function ensureCatalog() {
+    if (!_catalogLoaded) await loadCatalog();
+  }
+
+  // Resuelve el SKU real existente en el backend a partir de un producto del HTML.
+  // Prioridad: data-sku/sku → id (si existe en catálogo) → coincidencia por nombre.
+  function resolveProductSku(product) {
+    if (!product) return null;
+    const direct = product.sku || (product.dataset && product.dataset.sku) || product.id;
+    if (direct && _catalogBySku[direct]) return direct;
+    if (product.name) {
+      const match = _catalogByName[normName(product.name)];
+      if (match) return match.sku;
+    }
+    return direct || null; // último recurso: que el backend valide
+  }
+
+  // ---------- fallback global de imágenes rotas (no cambia el diseño) ----------
+  const FALLBACK_IMG =
+    'https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=600&q=80';
+  document.addEventListener(
+    'error',
+    (e) => {
+      const t = e.target;
+      if (t && t.tagName === 'IMG' && !t.dataset.fbk) {
+        t.dataset.fbk = '1';
+        t.src = FALLBACK_IMG;
+      }
+    },
+    true // fase de captura: los errores de <img> no burbujean
+  );
+
+  // Barrido para imágenes que ya fallaron antes de registrar el listener.
+  function sweepBrokenImages() {
+    document.querySelectorAll('img').forEach((img) => {
+      if (img.complete && img.naturalWidth === 0 && !img.dataset.fbk) {
+        img.dataset.fbk = '1';
+        img.src = FALLBACK_IMG;
+      }
+    });
+  }
+  window.addEventListener('load', sweepBrokenImages);
+  setTimeout(sweepBrokenImages, 1500);
+
   // ---------- sesión invitado automática ----------
   async function ensureSession() {
     if (getToken()) return;
@@ -53,20 +124,136 @@
     }
   }
 
-  // ---------- sincronización del estado local con el servidor ----------
-  function syncCartFromServer(serverCart) {
-    // Mapea el formato del backend al que espera tu updateCartUI()
-    window.cart = (serverCart.items || []).map((i) => ({
-      id: i.sku, name: i.name, price: i.price, img: i.image, qty: i.quantity, productId: i.productId,
+  // ---------- normalización + render directo en el DOM ----------
+  const el = (id) => document.getElementById(id);
+
+  // Normaliza la respuesta del carrito a una forma estable.
+  function normalizeCartResponse(response) {
+    const cart = (response && response.data) || response || {};
+    return {
+      id: cart.id,
+      items: Array.isArray(cart.items) ? cart.items : [],
+      count: Number(cart.count || 0),
+      subtotal: Number(cart.subtotal || 0),
+      shipping: Number(cart.shipping != null ? cart.shipping : cart.shippingCost || 0),
+      total: Number(cart.total || 0),
+      freeShipping: Boolean(cart.freeShipping),
+      freeShippingThreshold: Number(cart.freeShippingThreshold || 500),
+    };
+  }
+
+  let _cart = normalizeCartResponse({});
+  let _favs = [];
+
+  // Renderiza el carrito usando los mismos IDs/clases de tu HTML (no cambia el diseño).
+  function renderCartUI(n) {
+    // Estado global para checkout / placeOrder / openCheckoutModal
+    window.cart = n.items.map((i) => ({
+      id: i.sku, productId: i.productId, name: i.name, price: i.price,
+      img: i.image, qty: i.quantity, lineTotal: i.lineTotal,
     }));
-    if (typeof updateCartUI === 'function') updateCartUI();
+
+    const badge = el('cartBadge');
+    if (badge) { badge.textContent = n.count; badge.style.display = n.count > 0 ? 'flex' : 'none'; }
+    const itemCount = el('cartItemCount');
+    if (itemCount) itemCount.textContent = n.count + (n.count === 1 ? ' artículo' : ' artículos');
+
+    const empty = el('cartEmpty');
+    const items = el('cartItems');
+    const footer = el('cartFooter');
+    if (!items) return;
+
+    if (n.items.length === 0) {
+      if (empty) empty.style.display = 'flex';
+      items.innerHTML = '';
+      if (footer) footer.style.display = 'none';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    if (footer) footer.style.display = 'block';
+
+    items.innerHTML = n.items.map((it) => {
+      const line = it.lineTotal != null ? it.lineTotal : it.price * it.quantity;
+      return `
+      <div class="cart-item">
+        <div class="cart-item-img"><img src="${it.image}" alt="${it.name}"></div>
+        <div class="cart-item-info">
+          <h5>${it.name}</h5>
+          <p>Entrega: Mismo día CDMX</p>
+          <div class="cart-item-price">$${Number(line).toLocaleString()} MXN</div>
+          <div class="cart-item-controls">
+            <button class="qty-btn" onclick="changeQty('${it.sku}',-1)">−</button>
+            <span class="qty-num">${it.quantity}</span>
+            <button class="qty-btn" onclick="changeQty('${it.sku}',1)">+</button>
+          </div>
+        </div>
+        <button class="cart-item-remove" onclick="removeFromCart('${it.sku}')" title="Eliminar">✕</button>
+      </div>`;
+    }).join('');
+
+    const sub = el('cartSubtotal'); if (sub) sub.textContent = '$' + n.subtotal.toLocaleString() + ' MXN';
+    const ship = el('cartShipping'); if (ship) ship.textContent = n.shipping === 0 ? '¡Gratis!' : '$' + n.shipping + ' MXN';
+    const tot = el('cartTotal'); if (tot) tot.textContent = '$' + n.total.toLocaleString() + ' MXN';
+
+    const msg = el('cartShippingMsg');
+    if (msg) {
+      if (n.freeShipping || n.subtotal >= n.freeShippingThreshold) {
+        msg.innerHTML = '🎉 ¡Felicidades! Tu pedido tiene <strong>envío gratis</strong>';
+        msg.style.background = 'rgba(157,168,130,0.15)';
+      } else {
+        const diff = n.freeShippingThreshold - n.subtotal;
+        msg.innerHTML = `🚚 Agrega <strong>$${diff} MXN</strong> más para obtener <strong>envío gratis</strong>`;
+        msg.style.background = 'rgba(201,139,120,0.1)';
+      }
+    }
+  }
+
+  // Renderiza favoritos con los mismos IDs/clases de tu HTML.
+  function renderFavUI(list) {
+    window.favorites = list.map((f) => ({
+      id: f.sku, productId: f.productId, name: f.name, price: f.price, img: f.image,
+    }));
+    const badge = el('favBadge');
+    if (badge) { badge.textContent = list.length; badge.style.display = list.length > 0 ? 'flex' : 'none'; }
+
+    const empty = el('favEmpty');
+    const items = el('favItems');
+    if (!items) return;
+
+    if (list.length === 0) {
+      if (empty) empty.style.display = 'flex';
+      items.innerHTML = '';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    items.innerHTML = list.map((f) => `
+      <div class="fav-card">
+        <div class="fav-card-img"><img src="${f.image}" alt="${f.name}"></div>
+        <div class="fav-card-info">
+          <h5>${f.name}</h5>
+          <p>$${f.price} MXN</p>
+          <div class="fav-card-actions">
+            <button class="fav-card-btn fav-add-cart" onclick="addToCart({id:'${f.sku}'})">Al carrito</button>
+            <button class="fav-card-btn fav-remove" onclick="removeFromFav('${f.sku}')">✕</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  // ---------- sincronización del estado con el servidor ----------
+  function syncCartFromServer(serverCart) {
+    _cart = normalizeCartResponse(serverCart);
+    renderCartUI(_cart);
   }
   function syncFavFromServer(serverFavs) {
-    window.favorites = (serverFavs || []).map((f) => ({
-      id: f.sku, name: f.name, price: f.price, img: f.image, productId: f.productId,
-    }));
-    if (typeof updateFavUI === 'function') updateFavUI();
+    _favs = Array.isArray(serverFavs) ? serverFavs : (serverFavs && serverFavs.data) || [];
+    renderFavUI(_favs);
   }
+
+  // Sobrescribimos las funciones de tu HTML para que cualquier llamada interna
+  // re-renderice desde el estado real del servidor (no desde la variable léxica vacía).
+  window.updateCartUI = () => renderCartUI(_cart);
+  window.updateFavUI = () => renderFavUI(_favs);
 
   // Busca el productId real a partir del sku que usa tu HTML (p1..p12)
   async function productIdBySku(sku) {
@@ -86,7 +273,10 @@
   window.addToCart = async function (product) {
     try {
       await ensureSession();
-      const r = await api('/cart/items', { method: 'POST', body: { sku: product.id, quantity: 1 } });
+      await ensureCatalog();
+      const sku = resolveProductSku(product);
+      if (!sku) return showToast('⚠️ Producto no disponible');
+      const r = await api('/cart/items', { method: 'POST', body: { sku, quantity: 1 } });
       syncCartFromServer(r.data);
       showToast('🛒 Añadido al carrito');
       openCart();
@@ -160,7 +350,10 @@
   window.addToFav = async function (product) {
     try {
       await ensureSession();
-      const r = await api('/favorites', { method: 'POST', body: { sku: product.id } });
+      await ensureCatalog();
+      const sku = resolveProductSku(product);
+      if (!sku) return showToast('⚠️ Producto no disponible');
+      const r = await api('/favorites', { method: 'POST', body: { sku } });
       syncFavFromServer(r.data);
       showToast('❤️ Añadido a favoritos');
     } catch (e) {
@@ -346,6 +539,7 @@
   (async function init() {
     try {
       await ensureSession();
+      await loadCatalog();
       await refreshState();
       await handlePaymentReturn();
       console.log('🌸 Fleur API conectada:', API);

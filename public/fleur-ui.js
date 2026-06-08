@@ -182,7 +182,10 @@
         </div>
         <div class="fl-field"><label>Mensaje para la tarjeta floral</label>
           <textarea id="flCoMsg" placeholder="Ej: ¡Feliz cumpleaños! Con cariño..."></textarea></div>
-        <button class="fl-btn" id="flCoSubmit">Pagar y confirmar pedido →</button>
+        <div id="flCoMockNote" style="background:rgba(157,168,130,.12);border:1px solid var(--olive-soft,#D4D9C4);border-radius:12px;padding:10px 14px;font-size:11px;line-height:1.5;color:var(--olive,#9DA882);">
+          🧪 <strong>Pago de prueba:</strong> no se solicitará tarjeta. El pedido se marcará como pagado para demostración.
+        </div>
+        <button class="fl-btn" id="flCoSubmit">Pagar (prueba) y confirmar pedido →</button>
       </div>
     </div>
   </div>`;
