@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fleur — Florería de Boutique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #FAF7F2;
+  --cream-dark: #F3EDE4;
+  --rose: #EFC5C5;
+  --rose-deep: #E0A8A8;
+  --terra: #C98B78;
+  --terra-dark: #B07060;
+  --lavender: #C5BDD8;
+  --lavender-soft: #E4E0EE;
+  --olive: #9DA882;
+  --olive-soft: #D4D9C4;
+  --dark: #2A2420;
+  --mid: #6A5F58;
+  --light: #A8998F;
+  --white: #FFFFFF;
+  --border: #EDE5DC;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Jost', sans-serif;
+  --ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --radius: 20px;
+  --radius-sm: 12px;
+  --shadow: 0 8px 40px rgba(42,36,32,0.08);
+  --shadow-lg: 0 24px 80px rgba(42,36,32,0.14);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  font-family: var(--font-sans);
+  background: var(--cream);
+  color: var(--dark);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+img { display: block; max-width: 100%; }
+a { text-decoration: none; color: inherit; }
+button { border: none; background: none; cursor: pointer; font-family: var(--font-sans); }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb { background: var(--terra); border-radius: 4px; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes floatY { 0%, 100% { transform: translateY(0px) rotate(0deg); } 33% { transform: translateY(-18px) rotate(5deg); } 66% { transform: translateY(-8px) rotate(-3deg); } }
+@keyframes petalDrift { 0% { transform: translateY(-60px) translateX(0) rotate(0deg); opacity: 0; } 10% { opacity: 0.7; } 90% { opacity: 0.4; } 100% { transform: translateY(110vh) translateX(80px) rotate(720deg); opacity: 0; } }
+@keyframes shimmer { 0% { background-position: -600px 0; } 100% { background-position: 600px 0; } }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideRight { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideLeft { from { opacity: 0; transform: translateX(-100%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+.reveal { opacity: 0; transform: translateY(36px); transition: opacity 0.8s var(--ease), transform 0.8s var(--ease); }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-left { opacity: 0; transform: translateX(-36px); transition: opacity 0.8s var(--ease), transform 0.8s var(--ease); }
+.reveal-left.visible { opacity: 1; transform: translateX(0); }
+.reveal-right { opacity: 0; transform: translateX(36px); transition: opacity 0.8s var(--ease), transform 0.8s var(--ease); }
+.reveal-right.visible { opacity: 1; transform: translateX(0); }
+.d1 { transition-delay: 0.1s; } .d2 { transition-delay: 0.2s; } .d3 { transition-delay: 0.3s; } .d4 { transition-delay: 0.4s; } .d5 { transition-delay: 0.5s; }
+
+/* TOP BAR */
+.top-bar {
+  background: var(--dark);
+  color: rgba(255,255,255,0.85);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 10px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.top-bar::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(201,139,120,0.15), transparent);
+  animation: shimmer 3s infinite;
+  background-size: 600px 100%;
+}
+.top-bar strong { color: var(--rose); font-weight: 600; }
+.top-bar-social {
+  position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+  display: flex; gap: 14px;
+}
+.top-bar-social a { color: rgba(255,255,255,0.5); font-size: 12px; transition: color 0.3s; }
+.top-bar-social a:hover { color: var(--rose); }
+
+/* NAVBAR */
+.navbar {
+  position: sticky; top: 0; z-index: 1000;
+  background: rgba(250,247,242,0.88);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  padding: 0 clamp(20px, 5vw, 72px);
+  display: flex; align-items: center; justify-content: space-between;
+  height: 70px;
+}
+.navbar.scrolled { border-color: var(--border); box-shadow: 0 4px 30px rgba(42,36,32,0.06); }
+.nav-logo {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-style: italic;
+  letter-spacing: 2px;
+  color: var(--dark);
+  display: flex; align-items: center; gap: 10px;
+  transition: transform 0.3s;
+}
+.nav-logo:hover { transform: scale(1.02); }
+.nav-logo-flower {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--rose), var(--terra));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  animation: pulse 4s ease-in-out infinite;
+}
+.nav-links { display: flex; gap: 36px; list-style: none; }
+.nav-links a {
+  font-size: 11px; font-weight: 500; letter-spacing: 1.8px; text-transform: uppercase;
+  color: var(--mid); position: relative; padding-bottom: 3px; transition: color 0.3s;
+}
+.nav-links a::after {
+  content: ''; position: absolute; bottom: 0; left: 0;
+  width: 0; height: 1px; background: var(--terra); transition: width 0.35s var(--ease);
+}
+.nav-links a:hover { color: var(--dark); }
+.nav-links a:hover::after { width: 100%; }
+.nav-actions { display: flex; gap: 10px; align-items: center; }
+.nav-icon {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: all 0.3s var(--ease-spring); position: relative; color: var(--dark);
+}
+.nav-icon:hover { background: var(--rose); transform: scale(1.12); }
+.nav-icon .badge {
+  position: absolute; top: 0; right: 0; width: 16px; height: 16px;
+  background: var(--terra); color: white; border-radius: 50%; font-size: 9px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.nav-cta {
+  background: var(--dark); color: white; padding: 10px 22px; border-radius: 30px;
+  font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;
+  transition: all 0.35s var(--ease-spring);
+}
+.nav-cta:hover { background: var(--terra); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(201,139,120,0.4); }
+.hamburger { display: none; flex-direction: column; gap: 5px; padding: 6px; }
+.hamburger span { width: 22px; height: 1.5px; background: var(--dark); border-radius: 2px; transition: all 0.3s; display: block; }
+.hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+.mobile-menu {
+  display: none; position: fixed; top: 110px; left: 0; right: 0;
+  background: rgba(250,247,242,0.97); backdrop-filter: blur(20px);
+  padding: 24px 28px; border-bottom: 1px solid var(--border);
+  z-index: 999; animation: slideDown 0.3s var(--ease); box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+}
+.mobile-menu.open { display: block; }
+.mobile-menu a {
+  display: block; padding: 14px 0; border-bottom: 1px solid var(--border);
+  font-size: 13px; font-weight: 500; letter-spacing: 0.5px; color: var(--mid); transition: color 0.2s, padding-left 0.2s;
+}
+.mobile-menu a:hover { color: var(--terra); padding-left: 8px; }
+
+/* ============================
+   SEARCH OVERLAY
+============================ */
+.search-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(42,36,32,0.6); backdrop-filter: blur(8px);
+  display: none; align-items: flex-start; justify-content: center;
+  padding-top: 120px;
+  animation: overlayIn 0.3s var(--ease);
+}
+.search-overlay.open { display: flex; }
+.search-box {
+  background: white; border-radius: var(--radius);
+  padding: 32px; width: 90%; max-width: 640px;
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.3s var(--ease);
+}
+.search-box-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.search-input-wrap {
+  flex: 1; display: flex; align-items: center; gap: 12px;
+  border: 2px solid var(--terra); border-radius: 40px;
+  padding: 12px 20px;
+}
+.search-input-wrap input {
+  flex: 1; border: none; outline: none; font-family: var(--font-sans);
+  font-size: 15px; color: var(--dark); background: transparent;
+}
+.search-input-wrap input::placeholder { color: var(--light); }
+.search-close {
+  width: 38px; height: 38px; border-radius: 50%; background: var(--cream-dark);
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+  transition: all 0.3s; color: var(--mid);
+}
+.search-close:hover { background: var(--rose); color: var(--dark); }
+.search-results { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.search-result-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
+  cursor: pointer; transition: all 0.2s;
+}
+.search-result-item:hover { border-color: var(--terra); background: rgba(201,139,120,0.05); }
+.search-result-img {
+  width: 52px; height: 52px; border-radius: 10px; overflow: hidden; flex-shrink: 0;
+}
+.search-result-img img { width: 100%; height: 100%; object-fit: cover; }
+.search-result-info h5 { font-size: 13px; font-family: var(--font-serif); margin-bottom: 2px; }
+.search-result-info p { font-size: 11px; color: var(--terra); font-weight: 600; }
+.search-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.search-tag {
+  padding: 6px 14px; border-radius: 30px; border: 1px solid var(--border);
+  font-size: 11px; color: var(--mid); cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;
+}
+.search-tag:hover { border-color: var(--terra); color: var(--terra); background: rgba(201,139,120,0.05); }
+.search-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--light); margin-bottom: 12px; }
+
+/* ============================
+   CART PANEL
+============================ */
+.cart-overlay {
+  position: fixed; inset: 0; z-index: 8000;
+  background: rgba(42,36,32,0.5); backdrop-filter: blur(4px);
+  display: none;
+}
+.cart-overlay.open { display: block; animation: overlayIn 0.3s var(--ease); }
+.cart-panel {
+  position: fixed; top: 0; right: -460px; bottom: 0;
+  width: 440px; max-width: 100vw;
+  background: var(--cream); z-index: 8001;
+  display: flex; flex-direction: column;
+  transition: right 0.45s var(--ease);
+  box-shadow: -20px 0 60px rgba(42,36,32,0.12);
+}
+.cart-panel.open { right: 0; }
+.cart-header {
+  padding: 28px 28px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cart-header h3 {
+  font-family: var(--font-serif); font-size: 24px; font-weight: 400;
+  display: flex; align-items: center; gap: 10px;
+}
+.cart-header h3 span { font-size: 12px; color: var(--terra); font-family: var(--font-sans); font-weight: 600; }
+.cart-close {
+  width: 38px; height: 38px; border-radius: 50%; background: white;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+  transition: all 0.3s; border: 1px solid var(--border);
+}
+.cart-close:hover { background: var(--rose); }
+.cart-body { flex: 1; overflow-y: auto; padding: 20px 28px; }
+.cart-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100%; gap: 16px; color: var(--light); text-align: center; padding: 40px 0;
+}
+.cart-empty-icon { font-size: 64px; opacity: 0.4; }
+.cart-empty h4 { font-family: var(--font-serif); font-size: 22px; font-weight: 400; color: var(--mid); }
+.cart-empty p { font-size: 13px; line-height: 1.7; }
+.cart-item {
+  display: flex; gap: 14px; align-items: center;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+  animation: fadeIn 0.3s var(--ease);
+}
+.cart-item-img {
+  width: 70px; height: 70px; border-radius: 12px; overflow: hidden; flex-shrink: 0;
+}
+.cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
+.cart-item-info { flex: 1; }
+.cart-item-info h5 { font-family: var(--font-serif); font-size: 15px; font-weight: 400; margin-bottom: 4px; }
+.cart-item-info p { font-size: 11px; color: var(--light); }
+.cart-item-price { color: var(--terra); font-weight: 600; font-size: 14px; margin-top: 4px; }
+.cart-item-controls { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.qty-btn {
+  width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+  font-weight: 600; transition: all 0.2s; color: var(--dark);
+}
+.qty-btn:hover { background: var(--terra); color: white; border-color: var(--terra); }
+.qty-num { font-size: 14px; font-weight: 600; min-width: 20px; text-align: center; }
+.cart-item-remove { margin-left: auto; color: var(--light); font-size: 18px; transition: color 0.2s; }
+.cart-item-remove:hover { color: var(--terra); }
+.cart-footer {
+  padding: 20px 28px 28px;
+  border-top: 1px solid var(--border);
+  background: white;
+}
+.cart-summary { margin-bottom: 18px; }
+.cart-summary-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; padding: 5px 0;
+}
+.cart-summary-row.total {
+  font-weight: 600; font-size: 16px;
+  border-top: 1px solid var(--border); margin-top: 8px; padding-top: 12px;
+}
+.cart-summary-row.total span:last-child { color: var(--terra); font-family: var(--font-serif); font-size: 20px; }
+.cart-shipping-msg {
+  background: rgba(157,168,130,0.12); border-radius: 10px; padding: 10px 14px;
+  font-size: 11px; color: var(--olive); text-align: center; margin-bottom: 14px; line-height: 1.5;
+}
+.btn-checkout {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; background: var(--dark); color: white;
+  padding: 16px; border-radius: 40px; font-size: 13px; font-weight: 500;
+  letter-spacing: 1px; text-transform: uppercase; transition: all 0.35s var(--ease-spring);
+}
+.btn-checkout:hover { background: var(--terra); transform: translateY(-2px); box-shadow: 0 12px 32px rgba(201,139,120,0.4); }
+.cart-continue {
+  display: block; text-align: center; margin-top: 12px;
+  font-size: 11px; color: var(--light); letter-spacing: 1px;
+  cursor: pointer; transition: color 0.2s;
+}
+.cart-continue:hover { color: var(--terra); }
+
+/* ============================
+   FAVORITES PANEL
+============================ */
+.fav-panel {
+  position: fixed; top: 0; left: -460px; bottom: 0;
+  width: 440px; max-width: 100vw;
+  background: var(--cream); z-index: 8001;
+  display: flex; flex-direction: column;
+  transition: left 0.45s var(--ease);
+  box-shadow: 20px 0 60px rgba(42,36,32,0.12);
+}
+.fav-panel.open { left: 0; }
+.fav-header {
+  padding: 28px 28px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.fav-header h3 { font-family: var(--font-serif); font-size: 24px; font-weight: 400; display: flex; align-items: center; gap: 10px; }
+.fav-body { flex: 1; overflow-y: auto; padding: 20px 28px; }
+.fav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.fav-card {
+  background: white; border-radius: var(--radius-sm); overflow: hidden;
+  transition: all 0.3s var(--ease-spring); border: 1px solid var(--border);
+}
+.fav-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+.fav-card-img { aspect-ratio: 1; overflow: hidden; position: relative; }
+.fav-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+.fav-card:hover .fav-card-img img { transform: scale(1.06); }
+.fav-card-info { padding: 12px; }
+.fav-card-info h5 { font-family: var(--font-serif); font-size: 13px; font-weight: 400; margin-bottom: 4px; }
+.fav-card-info p { font-size: 12px; color: var(--terra); font-weight: 600; }
+.fav-card-actions { display: flex; gap: 6px; margin-top: 8px; }
+.fav-card-btn {
+  flex: 1; padding: 7px; border-radius: 8px; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.2s; text-align: center;
+}
+.fav-add-cart { background: var(--dark); color: white; }
+.fav-add-cart:hover { background: var(--terra); }
+.fav-remove { border: 1px solid var(--border); color: var(--mid); }
+.fav-remove:hover { border-color: var(--terra); color: var(--terra); }
+.fav-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 16px; color: var(--light); text-align: center; padding: 40px 0; }
+.fav-empty-icon { font-size: 64px; opacity: 0.4; }
+.fav-empty h4 { font-family: var(--font-serif); font-size: 22px; font-weight: 400; color: var(--mid); }
+.fav-empty p { font-size: 13px; line-height: 1.7; }
+
+/* ============================
+   CATEGORY MODAL
+============================ */
+.cat-modal-overlay {
+  position: fixed; inset: 0; z-index: 7000;
+  background: rgba(42,36,32,0.6); backdrop-filter: blur(8px);
+  display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.cat-modal-overlay.open { display: flex; animation: overlayIn 0.3s var(--ease); }
+.cat-modal {
+  background: var(--cream); border-radius: 28px;
+  width: 100%; max-width: 900px; max-height: 88vh;
+  overflow-y: auto; box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.35s var(--ease);
+}
+.cat-modal-header {
+  padding: 32px 36px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; background: var(--cream); z-index: 2;
+  border-radius: 28px 28px 0 0;
+}
+.cat-modal-header h3 { font-family: var(--font-serif); font-size: 28px; font-weight: 400; }
+.cat-modal-header p { font-size: 12px; color: var(--light); margin-top: 4px; }
+.cat-modal-close {
+  width: 40px; height: 40px; border-radius: 50%; background: white;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  border: 1px solid var(--border); transition: all 0.3s;
+}
+.cat-modal-close:hover { background: var(--rose); }
+.cat-modal-body { padding: 28px 36px 36px; }
+.cat-products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.cat-product-card {
+  background: white; border-radius: var(--radius-sm); overflow: hidden;
+  border: 1px solid var(--border); transition: all 0.35s var(--ease-spring); cursor: pointer;
+}
+.cat-product-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
+.cat-product-img { aspect-ratio: 1; overflow: hidden; position: relative; }
+.cat-product-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+.cat-product-card:hover .cat-product-img img { transform: scale(1.06); }
+.cat-product-tag {
+  position: absolute; top: 10px; left: 10px;
+  background: var(--terra); color: white; padding: 3px 10px;
+  border-radius: 20px; font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+}
+.cat-product-info { padding: 14px; }
+.cat-product-info h5 { font-family: var(--font-serif); font-size: 15px; font-weight: 400; margin-bottom: 4px; }
+.cat-product-info .price { color: var(--terra); font-weight: 600; font-size: 14px; }
+.cat-product-info .rating { font-size: 10px; color: var(--light); margin-top: 3px; }
+.cat-product-info .rating .stars { color: #F0B94A; }
+.cat-product-actions { display: flex; gap: 8px; margin-top: 10px; }
+.cat-btn-fav, .cat-btn-cart {
+  flex: 1; padding: 8px; border-radius: 8px; font-size: 11px; font-weight: 500;
+  letter-spacing: 0.5px; transition: all 0.2s; text-align: center;
+}
+.cat-btn-fav { border: 1px solid var(--border); color: var(--mid); }
+.cat-btn-fav:hover { border-color: var(--rose-deep); color: var(--terra); background: rgba(239,197,197,0.15); }
+.cat-btn-cart { background: var(--dark); color: white; }
+.cat-btn-cart:hover { background: var(--terra); }
+
+/* HERO */
+.hero {
+  position: relative; min-height: calc(100vh - 110px); overflow: hidden;
+  display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 0;
+}
+.hero-bg { position: absolute; inset: 0; z-index: 0; background: linear-gradient(135deg, #fdf9f6 0%, #f7ede8 50%, #f0e4ef 100%); }
+.hero-bg-circle { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(239,197,197,0.35), transparent 70%); pointer-events: none; }
+.hero-bg-circle.c1 { width: 600px; height: 600px; top: -100px; right: -80px; animation: floatY 8s ease-in-out infinite; }
+.hero-bg-circle.c2 { width: 400px; height: 400px; bottom: -60px; left: 20%; animation: floatY 10s ease-in-out infinite reverse; }
+.hero-bg-circle.c3 { width: 200px; height: 200px; top: 30%; left: 5%; background: radial-gradient(circle, rgba(197,189,216,0.3), transparent); animation: floatY 6s ease-in-out infinite; }
+.hero-content { position: relative; z-index: 2; padding: clamp(60px, 8vw, 120px) clamp(32px, 6vw, 80px); animation: fadeUp 1s var(--ease) both; }
+.hero-eyebrow { display: inline-flex; align-items: center; gap: 10px; color: var(--terra); font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px; }
+.hero-eyebrow::before { content: ''; width: 32px; height: 1px; background: var(--terra); }
+.hero h1 { font-family: var(--font-serif); font-size: clamp(52px, 7vw, 92px); font-weight: 400; line-height: 0.95; letter-spacing: -2px; color: var(--dark); margin-bottom: 28px; }
+.hero h1 em { font-style: italic; color: var(--terra); }
+.hero-desc { font-size: 15px; font-weight: 300; color: var(--mid); line-height: 1.8; max-width: 380px; margin-bottom: 44px; }
+.hero-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.btn-dark { background: var(--dark); color: white; padding: 15px 32px; border-radius: 40px; font-size: 12px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; transition: all 0.4s var(--ease-spring); }
+.btn-dark:hover { background: var(--terra); transform: translateY(-3px); box-shadow: 0 14px 32px rgba(201,139,120,0.35); }
+.btn-ghost { color: var(--dark); padding: 15px 32px; border-radius: 40px; font-size: 12px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; border: 1.5px solid var(--dark); transition: all 0.4s var(--ease-spring); }
+.btn-ghost:hover { border-color: var(--terra); color: var(--terra); transform: translateY(-3px); background: rgba(201,139,120,0.05); }
+.hero-metrics { display: flex; gap: 32px; margin-top: 52px; }
+.hero-metric span { font-family: var(--font-serif); font-size: 32px; font-weight: 500; color: var(--dark); display: block; line-height: 1; }
+.hero-metric small { font-size: 10px; color: var(--light); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 5px; display: block; }
+.hero-visual { position: relative; z-index: 2; height: 100%; min-height: calc(100vh - 110px); display: flex; align-items: center; justify-content: center; padding: 40px clamp(20px, 4vw, 60px) 40px 20px; }
+.hero-carousel { position: relative; width: 100%; max-width: 480px; }
+.hero-slide { display: none; position: relative; animation: scaleIn 0.7s var(--ease) both; }
+.hero-slide.active { display: block; }
+.hero-slide-img { width: 100%; height: clamp(340px, 50vh, 560px); border-radius: 200px 200px 120px 120px; overflow: hidden; box-shadow: var(--shadow-lg); }
+.hero-slide-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s var(--ease); }
+.hero-slide-img:hover img { transform: scale(1.04); }
+.hero-slide-badge { position: absolute; bottom: 28px; left: -40px; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: var(--radius); padding: 14px 18px; box-shadow: var(--shadow); min-width: 160px; animation: floatY 5s ease-in-out infinite; }
+.hero-slide-badge h5 { font-family: var(--font-serif); font-size: 14px; margin-bottom: 3px; }
+.hero-slide-badge p { font-size: 11px; color: var(--terra); font-weight: 600; }
+.hero-slide-badge .stars { color: #F0B94A; font-size: 10px; margin-top: 3px; }
+.hero-slide-badge2 { position: absolute; top: 36px; right: -36px; background: var(--dark); color: white; border-radius: var(--radius); padding: 12px 16px; font-size: 11px; box-shadow: var(--shadow); animation: floatY 6s ease-in-out infinite reverse; }
+.hero-slide-badge2 strong { display: block; font-family: var(--font-serif); font-size: 18px; }
+.hero-slide-label { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); background: var(--terra); color: white; padding: 6px 18px; border-radius: 30px; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
+.hero-controls { display: flex; align-items: center; gap: 14px; margin-top: 28px; }
+.carousel-dots { display: flex; gap: 7px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); cursor: pointer; transition: all 0.3s; }
+.dot.active { background: var(--terra); width: 24px; border-radius: 5px; }
+.carousel-arrows { display: flex; gap: 8px; margin-left: auto; }
+.arrow-btn { width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--border); background: white; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: all 0.3s var(--ease-spring); }
+.arrow-btn:hover { background: var(--dark); border-color: var(--dark); color: white; transform: scale(1.08); }
+
+/* VIDEO SECTION */
+.video-section {
+  position: relative; overflow: hidden;
+  background: var(--dark);
+}
+.video-container {
+  position: relative; width: 100%; padding-top: 42%;
+  overflow: hidden;
+}
+.video-container video, .video-container iframe {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
+}
+.video-overlay {
+  position: absolute; inset: 0; z-index: 2;
+  background: linear-gradient(to right, rgba(42,36,32,0.75) 0%, rgba(42,36,32,0.2) 60%, transparent 100%);
+  display: flex; align-items: center; padding: clamp(40px, 6vw, 100px);
+}
+.video-content { max-width: 480px; color: white; }
+.video-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--rose); display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.video-eyebrow::before { content: ''; width: 24px; height: 1px; background: var(--rose); }
+.video-content h2 { font-family: var(--font-serif); font-size: clamp(32px, 4vw, 54px); font-weight: 400; line-height: 1.05; margin-bottom: 16px; }
+.video-content h2 em { color: var(--rose); font-style: italic; }
+.video-content p { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.8; margin-bottom: 28px; max-width: 360px; }
+.play-btn {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+  color: white; padding: 14px 26px; border-radius: 40px;
+  font-size: 12px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;
+  backdrop-filter: blur(8px); transition: all 0.35s var(--ease-spring); cursor: pointer;
+}
+.play-btn:hover { background: var(--terra); border-color: var(--terra); transform: translateY(-2px); box-shadow: 0 12px 32px rgba(201,139,120,0.4); }
+.play-icon { width: 32px; height: 32px; border-radius: 50%; background: var(--terra); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+
+/* TICKER */
+.ticker { background: var(--terra); padding: 14px 0; overflow: hidden; }
+.ticker-inner { display: flex; white-space: nowrap; animation: marquee 22s linear infinite; gap: 0; }
+.ticker-item { display: inline-flex; align-items: center; gap: 20px; font-size: 12px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: white; padding: 0 30px; }
+.ticker-sep { color: rgba(255,255,255,0.4); }
+
+/* SECTION UTILS */
+.section { padding: clamp(60px, 9vw, 110px) clamp(24px, 6vw, 80px); }
+.section-alt { background: white; }
+.section-dark { background: var(--dark); color: white; }
+.section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: clamp(36px, 5vw, 60px); flex-wrap: wrap; gap: 16px; }
+.section-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--terra); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.section-eyebrow::before { content: ''; width: 24px; height: 1px; background: var(--terra); }
+.section-title { font-family: var(--font-serif); font-size: clamp(32px, 4.5vw, 52px); font-weight: 400; line-height: 1.05; letter-spacing: -1px; }
+.section-subtitle { font-size: 13px; color: var(--mid); margin-top: 8px; line-height: 1.6; }
+.see-all { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--terra); display: flex; align-items: center; gap: 8px; transition: gap 0.3s; white-space: nowrap; }
+.see-all:hover { gap: 14px; }
+
+/* CATEGORIES */
+.categories-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(12px, 2vw, 22px); }
+.category-card { position: relative; border-radius: 160px 160px 20px 20px; overflow: hidden; aspect-ratio: 3/4; cursor: pointer; transition: transform 0.5s var(--ease-spring), box-shadow 0.5s; }
+.category-card:hover { transform: translateY(-14px); box-shadow: 0 28px 64px rgba(42,36,32,0.16); }
+.category-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s var(--ease); }
+.category-card:hover img { transform: scale(1.08); }
+.category-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(42,36,32,0.65) 0%, transparent 50%); }
+.category-label { position: absolute; bottom: 0; left: 0; right: 0; padding: 24px 20px; text-align: center; }
+.category-label span { color: white; font-size: 13px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
+.category-label small { display: block; font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px; }
+.cat-explore-btn {
+  position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%) translateY(10px);
+  background: rgba(255,255,255,0.9); color: var(--dark); padding: 7px 18px; border-radius: 30px;
+  font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  opacity: 0; transition: all 0.3s var(--ease); white-space: nowrap;
+}
+.category-card:hover .cat-explore-btn { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* PRODUCT CARDS */
+.products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(14px, 2vw, 28px); }
+.product-card { background: white; border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: all 0.4s var(--ease-spring); position: relative; }
+.product-card:hover { transform: translateY(-10px); box-shadow: var(--shadow-lg); }
+.product-img { position: relative; aspect-ratio: 1; overflow: hidden; }
+.product-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s var(--ease); }
+.product-card:hover .product-img img { transform: scale(1.06); }
+.product-tag { position: absolute; top: 14px; left: 14px; background: var(--terra); color: white; padding: 4px 12px; border-radius: 20px; font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+.product-actions { position: absolute; top: 14px; right: 14px; display: flex; flex-direction: column; gap: 7px; opacity: 0; transform: translateX(12px); transition: all 0.3s var(--ease); }
+.product-card:hover .product-actions { opacity: 1; transform: translateX(0); }
+.product-action-btn { width: 36px; height: 36px; border-radius: 50%; background: white; box-shadow: 0 4px 14px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.3s var(--ease-spring); }
+.product-action-btn:hover { background: var(--terra); color: white; transform: scale(1.15); }
+.product-info { padding: clamp(14px, 2vw, 20px); }
+.product-info h4 { font-family: var(--font-serif); font-size: clamp(16px, 1.8vw, 20px); font-weight: 400; margin-bottom: 6px; }
+.product-price { color: var(--terra); font-weight: 600; font-size: 15px; }
+.product-price-old { color: var(--light); text-decoration: line-through; font-size: 12px; margin-left: 6px; font-weight: 400; }
+.product-rating { font-size: 10px; color: var(--light); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+.product-rating .stars { color: #F0B94A; }
+
+/* FEATURED STRIP */
+.featured-strip { display: grid; grid-template-columns: 1.2fr 1fr; gap: 0; overflow: hidden; border-radius: var(--radius); box-shadow: var(--shadow-lg); margin-top: clamp(40px, 5vw, 70px); }
+.featured-img { position: relative; overflow: hidden; aspect-ratio: 4/3; }
+.featured-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s var(--ease); }
+.featured-strip:hover .featured-img img { transform: scale(1.04); }
+.featured-info { background: var(--dark); padding: clamp(36px, 5vw, 60px); display: flex; flex-direction: column; justify-content: center; }
+.featured-info .section-eyebrow { color: var(--rose); }
+.featured-info .section-eyebrow::before { background: var(--rose); }
+.featured-info h2 { font-family: var(--font-serif); font-size: clamp(28px, 3.5vw, 44px); font-weight: 400; color: white; line-height: 1.1; margin: 14px 0; }
+.featured-info p { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.8; margin-bottom: 28px; }
+.btn-rose { display: inline-flex; align-items: center; gap: 10px; background: var(--terra); color: white; padding: 14px 28px; border-radius: 40px; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; transition: all 0.35s var(--ease-spring); align-self: flex-start; }
+.btn-rose:hover { background: var(--rose-deep); transform: translateY(-3px); box-shadow: 0 12px 28px rgba(201,139,120,0.4); }
+.featured-price { font-family: var(--font-serif); font-size: 42px; font-weight: 400; color: var(--rose); margin-bottom: 20px; }
+.featured-price small { font-size: 18px; color: rgba(255,255,255,0.4); font-family: var(--font-sans); font-weight: 300; }
+
+/* CUSTOMIZE */
+.customize-section { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(40px, 6vw, 80px); align-items: center; }
+.customize-img { position: relative; }
+.customize-img-main { width: 100%; aspect-ratio: 3/4; border-radius: 160px 160px 40px 40px; overflow: hidden; box-shadow: var(--shadow-lg); }
+.customize-img-main img { width: 100%; height: 100%; object-fit: cover; }
+.customize-float { position: absolute; bottom: 36px; right: -24px; background: white; border-radius: var(--radius); padding: 18px 22px; box-shadow: var(--shadow); min-width: 170px; animation: floatY 5s ease-in-out infinite; }
+.customize-float h5 { font-family: var(--font-serif); font-size: 15px; margin-bottom: 5px; }
+.customize-float p { font-size: 11px; color: var(--light); }
+.customize-float-tag { display: inline-block; background: rgba(201,139,120,0.12); color: var(--terra); border-radius: 20px; padding: 3px 10px; font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.customize-steps { display: flex; flex-direction: column; gap: 18px; margin: 32px 0; }
+.customize-step { display: flex; gap: 18px; align-items: flex-start; }
+.step-num { width: 38px; height: 38px; border-radius: 50%; background: rgba(201,139,120,0.12); color: var(--terra); font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s; }
+.customize-step:hover .step-num { background: var(--terra); color: white; }
+.step-text h4 { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+.step-text p { font-size: 12px; color: var(--light); line-height: 1.6; }
+.color-swatches { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+.swatch { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.3s var(--ease-spring); }
+.swatch:hover, .swatch.active { border-color: var(--dark); transform: scale(1.2); }
+
+/* TESTIMONIALS */
+.testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(14px, 2vw, 24px); }
+.testimonial-card { background: var(--cream-dark); border-radius: var(--radius); padding: clamp(24px, 3vw, 36px); transition: all 0.4s var(--ease-spring); }
+.testimonial-card:hover { transform: translateY(-8px); box-shadow: var(--shadow); background: white; }
+.t-quote { font-size: 50px; color: var(--rose); line-height: 0.7; font-family: Georgia; margin-bottom: 12px; }
+.t-text { font-size: 13px; color: var(--mid); line-height: 1.8; font-style: italic; margin-bottom: 22px; }
+.t-author { display: flex; align-items: center; gap: 12px; }
+.t-avatar { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; border: 2px solid var(--rose); }
+.t-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.t-name { font-size: 13px; font-weight: 600; }
+.t-loc { font-size: 10px; color: var(--light); }
+.t-stars { color: #F0B94A; font-size: 11px; margin-top: 2px; }
+
+/* CONTACT */
+.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(40px, 6vw, 80px); align-items: start; }
+.contact-form { display: flex; flex-direction: column; gap: 14px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--mid); }
+.form-input {
+  padding: 13px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13px; font-family: var(--font-sans); background: white; color: var(--dark);
+  transition: all 0.3s; outline: none;
+}
+.form-input:focus { border-color: var(--terra); box-shadow: 0 0 0 3px rgba(201,139,120,0.12); }
+.form-input.error { border-color: #E07070; box-shadow: 0 0 0 3px rgba(224,112,112,0.1); }
+.form-input.success { border-color: var(--olive); }
+textarea.form-input { height: 120px; resize: none; }
+.form-error { font-size: 10px; color: #C05050; font-weight: 600; letter-spacing: 0.5px; display: none; margin-top: 2px; }
+.form-error.show { display: block; }
+.contact-info { display: flex; flex-direction: column; gap: 24px; }
+.contact-info-item { display: flex; gap: 18px; align-items: flex-start; }
+.contact-icon { width: 48px; height: 48px; background: rgba(201,139,120,0.1); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; transition: all 0.3s var(--ease-spring); }
+.contact-info-item:hover .contact-icon { background: var(--terra); transform: scale(1.1); }
+.contact-icon-text h4 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.contact-icon-text p { font-size: 12px; color: var(--mid); line-height: 1.6; }
+.newsletter-box { background: var(--cream-dark); border-radius: var(--radius); padding: 28px; margin-top: 24px; }
+.newsletter-box h3 { font-family: var(--font-serif); font-size: 22px; font-weight: 400; margin-bottom: 8px; }
+.newsletter-box p { font-size: 12px; color: var(--mid); margin-bottom: 16px; }
+.newsletter-row { display: flex; gap: 10px; }
+.newsletter-input { flex: 1; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 30px; font-size: 12px; font-family: var(--font-sans); outline: none; transition: border-color 0.3s; }
+.newsletter-input:focus { border-color: var(--terra); }
+.btn-subscribe { background: var(--terra); color: white; padding: 12px 22px; border-radius: 30px; font-size: 11px; font-weight: 600; letter-spacing: 1px; transition: all 0.3s var(--ease-spring); }
+.btn-subscribe:hover { background: var(--dark); transform: scale(1.04); }
+
+/* FOOTER */
+.footer { background: var(--dark); color: white; padding: clamp(56px, 8vw, 100px) clamp(24px, 6vw, 80px) 0; }
+.footer-grid { display: grid; grid-template-columns: 1.8fr 1fr 1fr 1fr; gap: clamp(24px, 4vw, 56px); padding-bottom: clamp(40px, 5vw, 70px); border-bottom: 1px solid rgba(255,255,255,0.08); }
+.footer-brand .logo { font-family: var(--font-serif); font-size: 28px; font-style: italic; display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.footer-brand p { font-size: 12px; color: rgba(255,255,255,0.45); line-height: 1.8; max-width: 240px; margin-bottom: 24px; }
+.footer-social { display: flex; gap: 10px; }
+.social-btn { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 14px; color: rgba(255,255,255,0.5); transition: all 0.3s var(--ease-spring); }
+.social-btn:hover { background: var(--terra); border-color: var(--terra); color: white; transform: scale(1.15); }
+.footer-col h4 { font-family: var(--font-serif); font-size: 18px; font-weight: 400; margin-bottom: 20px; color: rgba(255,255,255,0.85); }
+.footer-col a { display: block; font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 11px; transition: all 0.25s; }
+.footer-col a:hover { color: var(--rose); padding-left: 5px; }
+.footer-bottom { padding: 22px 0; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: rgba(255,255,255,0.25); flex-wrap: wrap; gap: 10px; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 28px; right: 28px; background: var(--dark); color: white; padding: 14px 20px; border-radius: var(--radius-sm); font-size: 13px; z-index: 9999; display: flex; align-items: center; gap: 10px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); animation: slideDown 0.4s var(--ease); }
+.toast-icon { color: var(--rose); font-size: 16px; }
+.petal { position: fixed; pointer-events: none; z-index: 0; border-radius: 50% 0 50% 0; animation: petalDrift linear forwards; }
+
+/* RESPONSIVE */
+@media (max-width: 1100px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-visual { min-height: 50vh; padding: 0 clamp(24px, 5vw, 60px) 60px; }
+  .hero-slide-badge { left: 10px; bottom: 20px; }
+  .hero-slide-badge2 { right: 0; top: 20px; }
+  .categories-grid { grid-template-columns: repeat(2, 1fr); }
+  .products-grid { grid-template-columns: repeat(2, 1fr); }
+  .featured-strip { grid-template-columns: 1fr; }
+  .featured-img { aspect-ratio: 16/7; }
+  .customize-section { grid-template-columns: 1fr; }
+  .customize-img-main { max-width: 400px; margin: 0 auto; aspect-ratio: 1; }
+  .testimonials-grid { grid-template-columns: 1fr 1fr; }
+  .contact-grid { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .nav-links { display: none; }
+  .hamburger { display: flex; }
+  .nav-cta { display: none; }
+  .cat-products-grid { grid-template-columns: repeat(2, 1fr); }
+  .video-container { padding-top: 60%; }
+}
+@media (max-width: 700px) {
+  .testimonials-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .top-bar-social { display: none; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .fav-grid { grid-template-columns: 1fr; }
+  .cat-products-grid { grid-template-columns: 1fr; }
+  .search-results { grid-template-columns: 1fr; }
+  .video-container { padding-top: 75%; }
+  .video-overlay { padding: clamp(24px, 4vw, 60px); }
+}
+@media (max-width: 480px) {
+  .categories-grid { grid-template-columns: 1fr 1fr; }
+  .products-grid { grid-template-columns: 1fr; }
+  .hero-actions { flex-direction: column; align-items: flex-start; }
+  .hero h1 { font-size: 38px; letter-spacing: -1px; }
+  .hero-metrics { flex-direction: column; gap: 12px; }
+  .cart-panel, .fav-panel { width: 100vw; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  🌸 Envío gratis en pedidos <strong>+$500 MXN</strong> &nbsp;·&nbsp; Colección Primavera 2026 disponible
+  <div class="top-bar-social">
+    <a href="#" aria-label="Instagram">📷</a>
+    <a href="#" aria-label="Facebook">📘</a>
+    <a href="#" aria-label="Pinterest">📌</a>
+    <a href="#" aria-label="TikTok">🎵</a>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <a href="#hero" class="nav-logo">
+    <div class="nav-logo-flower">🌸</div>
+    Fleur
+  </a>
+  <ul class="nav-links">
+    <li><a href="#categorias">Colección</a></li>
+    <li><a href="#productos">Bouquets</a></li>
+    <li><a href="#personalizar">Personalizar</a></li>
+    <li><a href="#nosotros">Nosotros</a></li>
+    <li><a href="#contacto">Contacto</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button class="nav-icon" aria-label="Buscar" onclick="openSearch()">🔍</button>
+    <button class="nav-icon" aria-label="Favoritos" onclick="openFavPanel()" id="favNavIcon">
+      🤍
+      <span class="badge" id="favBadge" style="display:none;">0</span>
+    </button>
+    <button class="nav-icon" aria-label="Carrito" onclick="openCart()" id="cartNavIcon">
+      🛍️
+      <span class="badge" id="cartBadge">0</span>
+    </button>
+    <a href="#contacto" class="nav-cta">Ordenar</a>
+  </div>
+  <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#categorias" onclick="closeMenu()">Colección</a>
+  <a href="#productos" onclick="closeMenu()">Bouquets</a>
+  <a href="#personalizar" onclick="closeMenu()">Personalizar</a>
+  <a href="#nosotros" onclick="closeMenu()">Nosotros</a>
+  <a href="#contacto" onclick="closeMenu()">Contacto</a>
+  <a href="javascript:void(0)" onclick="openCart();closeMenu()">🛍️ Carrito</a>
+  <a href="javascript:void(0)" onclick="openFavPanel();closeMenu()">🤍 Favoritos</a>
+</div>
+
+<!-- SEARCH OVERLAY -->
+<div class="search-overlay" id="searchOverlay" onclick="closeSearchOnBackdrop(event)">
+  <div class="search-box" id="searchBox">
+    <div class="search-box-header">
+      <div class="search-input-wrap">
+        <span style="font-size:16px;">🔍</span>
+        <input type="text" id="searchInput" placeholder="Buscar arreglos, flores, colecciones..." oninput="handleSearch(this.value)" autocomplete="off">
+      </div>
+      <button class="search-close" onclick="closeSearch()">✕</button>
+    </div>
+    <div class="search-label">Búsquedas populares</div>
+    <div class="search-tags">
+      <div class="search-tag" onclick="quickSearch('Rosas')">🌹 Rosas</div>
+      <div class="search-tag" onclick="quickSearch('Orquídeas')">🌺 Orquídeas</div>
+      <div class="search-tag" onclick="quickSearch('Peonías')">🌸 Peonías</div>
+      <div class="search-tag" onclick="quickSearch('Boda')">💍 Boda</div>
+      <div class="search-tag" onclick="quickSearch('Regalo')">🎁 Regalo</div>
+      <div class="search-tag" onclick="quickSearch('Floreros')">🏺 Floreros</div>
+    </div>
+    <div class="search-label" id="searchResultLabel">Sugerencias</div>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+</div>
+
+<!-- CART PANEL -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<div class="cart-panel" id="cartPanel">
+  <div class="cart-header">
+    <h3>Tu Carrito <span id="cartItemCount">0 artículos</span></h3>
+    <button class="cart-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-body" id="cartBody">
+    <div class="cart-empty" id="cartEmpty">
+      <div class="cart-empty-icon">🛍️</div>
+      <h4>Tu carrito está vacío</h4>
+      <p>Explora nuestra colección y encuentra el arreglo perfecto para ti.</p>
+    </div>
+    <div id="cartItems"></div>
+  </div>
+  <div class="cart-footer" id="cartFooter" style="display:none;">
+    <div class="cart-shipping-msg" id="cartShippingMsg"></div>
+    <div class="cart-summary">
+      <div class="cart-summary-row"><span>Subtotal</span><span id="cartSubtotal">$0 MXN</span></div>
+      <div class="cart-summary-row"><span>Envío</span><span id="cartShipping">$80 MXN</span></div>
+      <div class="cart-summary-row total"><span>Total</span><span id="cartTotal">$0 MXN</span></div>
+    </div>
+    <button class="btn-checkout" onclick="checkout()">Proceder al pago →</button>
+    <span class="cart-continue" onclick="closeCart()">← Continuar comprando</span>
+  </div>
+</div>
+
+<!-- FAVORITES PANEL -->
+<div class="fav-panel" id="favPanel">
+  <div class="fav-header">
+    <h3>❤️ Favoritos</h3>
+    <button class="cart-close" onclick="closeFavPanel()">✕</button>
+  </div>
+  <div class="fav-body" id="favBody">
+    <div class="fav-empty" id="favEmpty">
+      <div class="fav-empty-icon">🤍</div>
+      <h4>Sin favoritos aún</h4>
+      <p>Guarda tus arreglos favoritos para encontrarlos fácilmente después.</p>
+    </div>
+    <div class="fav-grid" id="favItems"></div>
+  </div>
+</div>
+
+<!-- CATEGORY MODAL -->
+<div class="cat-modal-overlay" id="catModal" onclick="closeCatModalOnBackdrop(event)">
+  <div class="cat-modal" id="catModalContent">
+    <div class="cat-modal-header">
+      <div>
+        <h3 id="catModalTitle">Categoría</h3>
+        <p id="catModalSubtitle">Explora todos los productos</p>
+      </div>
+      <button class="cat-modal-close" onclick="closeCatModal()">✕</button>
+    </div>
+    <div class="cat-modal-body">
+      <div class="cat-products-grid" id="catModalGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg" id="heroBg">
+    <div class="hero-bg-circle c1"></div>
+    <div class="hero-bg-circle c2"></div>
+    <div class="hero-bg-circle c3"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Colección Primavera 2025</div>
+    <h1>Arte<br>floral<br><em>único</em></h1>
+    <p class="hero-desc">Bouquets artesanales con flores frescas seleccionadas del campo, diseñados con amor para cada momento especial de tu vida.</p>
+    <div class="hero-actions">
+      <a href="#productos" class="btn-dark">Explorar Colección</a>
+      <a href="#personalizar" class="btn-ghost">Personalizar Ramo</a>
+    </div>
+    <div class="hero-metrics">
+      <div class="hero-metric"><span>2,400+</span><small>Clientes felices</small></div>
+      <div class="hero-metric"><span>85+</span><small>Variedades</small></div>
+      <div class="hero-metric"><span>4.9★</span><small>Calificación</small></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-carousel">
+      <div class="hero-slide active" id="slide-0">
+        <div class="hero-slide-label">✨ Más Vendido</div>
+        <div class="hero-slide-img">
+          <img src="https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=700&q=85" alt="Bouquet azul y blanco">
+        </div>
+        <div class="hero-slide-badge"><h5>Bouquet Azul</h5><p>$380 MXN</p><div class="stars">★★★★★</div></div>
+        <div class="hero-slide-badge2"><span style="font-size:9px;opacity:.6;">Ahorra</span><strong>20%</strong></div>
+      </div>
+      <div class="hero-slide" id="slide-1">
+        <div class="hero-slide-label">🌹 Flores Premium</div>
+        <div class="hero-slide-img">
+          <img src="https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=700&q=85" alt="Rosas reales">
+        </div>
+        <div class="hero-slide-badge"><h5>Rosas Reales</h5><p>$520 MXN</p><div class="stars">★★★★★</div></div>
+        <div class="hero-slide-badge2"><span style="font-size:9px;opacity:.6;">Solo</span><strong>5 left</strong></div>
+      </div>
+      <div class="hero-slide" id="slide-2">
+        <div class="hero-slide-label">🎁 Regalo Perfecto</div>
+        <div class="hero-slide-img">
+          <img src="https://arreglofloral.mx/wp-content/uploads/2025/07/0a38ecf5-90a4-4e0f-ad4d-231664fc3906-1.jpeg" alt="Peonías de lujo">
+        </div>
+        <div class="hero-slide-badge"><h5>Peonías Silvestres</h5><p>$640 MXN</p><div class="stars">★★★★★</div></div>
+        <div class="hero-slide-badge2"><span style="font-size:9px;opacity:.6;">Envío</span><strong>Hoy</strong></div>
+      </div>
+      <div class="hero-controls">
+        <div class="carousel-dots" id="carouselDots">
+          <div class="dot active" onclick="goSlide(0)"></div>
+          <div class="dot" onclick="goSlide(1)"></div>
+          <div class="dot" onclick="goSlide(2)"></div>
+        </div>
+        <div class="carousel-arrows">
+          <button class="arrow-btn" onclick="prevSlide()">←</button>
+          <button class="arrow-btn" onclick="nextSlide()">→</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-inner">
+    <span class="ticker-item">Flores Frescas del Campo <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Envío el Mismo Día <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Colección Primavera 2025 <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Personaliza tu Bouquet <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Más de 85 Variedades <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Envío Gratis +$500 MXN <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Flores Frescas del Campo <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Envío el Mismo Día <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Colección Primavera 2025 <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Personaliza tu Bouquet <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Más de 85 Variedades <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Envío Gratis +$500 MXN <span class="ticker-sep">✦</span></span>
+  </div>
+</div>
+
+<!-- VIDEO SECTION -->
+<div class="video-section" id="inicio-video">
+  <div class="video-container">
+    <div id="fleurVideo" style="position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=1400&q=80') center/cover no-repeat;"></div>
+  </div>
+  <div class="video-overlay">
+    <div class="video-content">
+      <div class="video-eyebrow">Nuestra Florería</div>
+      <h2>El Arte de las <em>Flores Frescas</em></h2>
+      <p>Cada mañana seleccionamos las flores más frescas del mercado para crear arreglos únicos que transmiten emociones y hacen especiales tus momentos.</p>
+      <button class="play-btn" onclick="toggleVideo()">
+        <div class="play-icon" id="playIcon">▶</div>
+        <span id="playBtnText">Ver nuestra historia</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORIES -->
+<section class="section" id="categorias">
+  <div class="section-header">
+    <div class="reveal">
+      <div class="section-eyebrow">Explorar</div>
+      <h2 class="section-title">Comprar por <em>Categoría</em></h2>
+      <p class="section-subtitle">Encuentra el arreglo perfecto para cada momento</p>
+    </div>
+    <a href="#productos" class="see-all reveal d2">Ver todo →</a>
+  </div>
+  <div class="categories-grid">
+    <div class="category-card reveal d1" onclick="openCatModal('ramos')">
+      <img src="https://floresdebarro.cl/cdn/shop/products/RMNFCA-1-floresdebarro-francisca.jpg?v=1656697092&width=533" alt="Ramos de mano" loading="lazy">
+      <div class="category-overlay"></div>
+      <div class="cat-explore-btn">Ver colección →</div>
+      <div class="category-label">
+        <span>Ramos de Mano</span>
+        <small>32 productos</small>
+      </div>
+    </div>
+    <div class="category-card reveal d2" onclick="openCatModal('floreros')">
+      <img src="https://www.kukyflor.com/blog/wp-content/uploads/2022/12/Floreros-de-vidrio-como-elegir-el-mejor-diseno-para-tus-flores.jpg" alt="Floreros" loading="lazy">
+      <div class="category-overlay"></div>
+      <div class="cat-explore-btn">Ver colección →</div>
+      <div class="category-label">
+        <span>Floreros</span>
+        <small>18 productos</small>
+      </div>
+    </div>
+    <div class="category-card reveal d3" onclick="openCatModal('orquideas')">
+      <img src="https://m.media-amazon.com/images/I/71qbmWn6VbL._AC_UF894,1000_QL80_.jpg" alt="Orquídeas" loading="lazy">
+      <div class="category-overlay"></div>
+      <div class="cat-explore-btn">Ver colección →</div>
+      <div class="category-label">
+        <span>Orquídeas</span>
+        <small>24 productos</small>
+      </div>
+    </div>
+    <div class="category-card reveal d4" onclick="openCatModal('estacional')">
+      <img src="https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?w=500&q=80" alt="Estacional" loading="lazy">
+      <div class="category-overlay"></div>
+      <div class="cat-explore-btn">Ver colección →</div>
+      <div class="category-label">
+        <span>Estacional</span>
+        <small>15 productos</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<section class="section section-alt" id="productos">
+  <div class="section-header">
+    <div class="reveal">
+      <div class="section-eyebrow">Bestsellers</div>
+      <h2 class="section-title">Más <em>Populares</em></h2>
+      <p class="section-subtitle">Los favoritos de nuestros clientes este mes</p>
+    </div>
+    <a href="#" class="see-all reveal d2">Ver catálogo →</a>
+  </div>
+  <div class="products-grid">
+    <div class="product-card reveal d1">
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=600&q=80" alt="Bouquet Azul" loading="lazy">
+        <div class="product-tag">NUEVO</div>
+        <div class="product-actions">
+          <button class="product-action-btn" onclick="addToFav({id:'p1',name:'Bouquet Azul y Blanco',price:380,img:'https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=300&q=80'})" aria-label="Favorito">🤍</button>
+          <button class="product-action-btn" onclick="addToCart({id:'p1',name:'Bouquet Azul y Blanco',price:380,img:'https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=300&q=80'})" aria-label="Carrito">🛍️</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <h4>Bouquet Azul y Blanco</h4>
+        <div><span class="product-price">$380 MXN</span><span class="product-price-old">$450</span></div>
+        <div class="product-rating"><span class="stars">★★★★★</span> 4.9 · 248 reseñas</div>
+      </div>
+    </div>
+    <div class="product-card reveal d2">
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=600&q=80" alt="Rosas Reales" loading="lazy">
+        <div class="product-tag" style="background:var(--lavender);color:var(--dark);">−20%</div>
+        <div class="product-actions">
+          <button class="product-action-btn" onclick="addToFav({id:'p2',name:'Ramos Rosas Reales',price:520,img:'https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=300&q=80'})" aria-label="Favorito">🤍</button>
+          <button class="product-action-btn" onclick="addToCart({id:'p2',name:'Ramos Rosas Reales',price:520,img:'https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=300&q=80'})" aria-label="Carrito">🛍️</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <h4>Ramos Rosas Reales</h4>
+        <div><span class="product-price">$520 MXN</span><span class="product-price-old">$650</span></div>
+        <div class="product-rating"><span class="stars">★★★★★</span> 4.8 · 192 reseñas</div>
+      </div>
+    </div>
+    <div class="product-card reveal d3">
+      <div class="product-img">
+        <img src="https://www.yaakunflores.com/uploads/arreglos/canasta-de-100-rosas-tonos-rosas-con-guia.jpg" alt="Canasta Floral" loading="lazy">
+        <div class="product-tag" style="background:var(--olive);">TOP</div>
+        <div class="product-actions">
+          <button class="product-action-btn" onclick="addToFav({id:'p3',name:'Canasta con Flores',price:620,img:'https://www.yaakunflores.com/uploads/arreglos/canasta-de-100-rosas-tonos-rosas-con-guia.jpg'})" aria-label="Favorito">🤍</button>
+          <button class="product-action-btn" onclick="addToCart({id:'p3',name:'Canasta con Flores',price:620,img:'https://www.yaakunflores.com/uploads/arreglos/canasta-de-100-rosas-tonos-rosas-con-guia.jpg'})" aria-label="Carrito">🛍️</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <h4>Canasta con Flores</h4>
+        <div><span class="product-price">$620 MXN</span></div>
+        <div class="product-rating"><span class="stars">★★★★★</span> 5.0 · 89 reseñas</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="featured-strip reveal">
+    <div class="featured-img">
+      <img src="https://cdn0.ecologiaverde.com/es/posts/3/6/1/peonias_como_cuidarlas_y_su_significado_2163_600.jpg" alt="Peonías Silvestres" loading="lazy">
+    </div>
+    <div class="featured-info">
+      <div class="section-eyebrow">Edición Limitada</div>
+      <h2>Peonías<br><em style="font-style:italic;color:var(--rose);">Silvestres</em></h2>
+      <div class="featured-price">$640 <small>MXN</small></div>
+      <p>Las peonías más escasas de la temporada. Cultivadas en las serranías de Oaxaca, cortadas el mismo día de tu pedido.</p>
+      <button class="btn-rose" onclick="addToCart({id:'fp1',name:'Peonías Silvestres',price:640,img:'https://cdn0.ecologiaverde.com/es/posts/3/6/1/peonias_como_cuidarlas_y_su_significado_2163_600.jpg'})">
+        Ordenar Ahora →
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- CUSTOMIZE -->
+<section class="section" id="personalizar">
+  <div class="customize-section">
+    <div class="customize-img reveal-left">
+      <div class="customize-img-main">
+        <img src="https://images.unsplash.com/photo-1455582916367-25f75bfc6710?w=700&q=85" alt="Personaliza tu ramo" loading="lazy">
+      </div>
+      <div class="customize-float">
+        <div class="customize-float-tag">Tu elección</div>
+        <h5>Tu ramo único</h5>
+        <p>Diseñado a tu gusto</p>
+      </div>
+    </div>
+    <div class="reveal-right">
+      <div class="section-eyebrow">Diseñador Floral</div>
+      <h2 class="section-title">Personaliza<br><em>tu Ramo</em></h2>
+      <p style="font-size:13px;color:var(--mid);line-height:1.8;margin:18px 0;">Crea el bouquet de tus sueños. Elige flores, colores, tamaño y empaque. Nuestros floristas lo harán realidad.</p>
+      <div class="customize-steps">
+        <div class="customize-step"><div class="step-num">1</div><div class="step-text"><h4>Elige tus flores</h4><p>Rosas, tulipanes, peonías, lavanda, lirios, orquídeas y más de 85 variedades disponibles.</p></div></div>
+        <div class="customize-step"><div class="step-num">2</div><div class="step-text"><h4>Selecciona el color</h4><p>Desde tonos cálidos hasta paletas monocromáticas. Combinamos lo que imaginas.</p></div></div>
+        <div class="customize-step"><div class="step-num">3</div><div class="step-text"><h4>Elige el empaque</h4><p>Papel kraft natural, caja de lujo, celofán cristal o tul francés con listón.</p></div></div>
+        <div class="customize-step"><div class="step-num">4</div><div class="step-text"><h4>Programa la entrega</h4><p>Envío el mismo día en CDMX. Programa la fecha y hora exacta que necesitas.</p></div></div>
+      </div>
+      <p style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:10px;">Color de flores</p>
+      <div class="color-swatches">
+        <div class="swatch active" style="background:#EFC5C5;" title="Rosa" onclick="selectSwatch(this)"></div>
+        <div class="swatch" style="background:#C5BDD8;" title="Lavanda" onclick="selectSwatch(this)"></div>
+        <div class="swatch" style="background:#F5E6A3;" title="Amarillo" onclick="selectSwatch(this)"></div>
+        <div class="swatch" style="background:#FFFFFF;border:2px solid #ddd;" title="Blanco" onclick="selectSwatch(this)"></div>
+        <div class="swatch" style="background:#C8E6C9;" title="Verde" onclick="selectSwatch(this)"></div>
+        <div class="swatch" style="background:#C98B78;" title="Terracota" onclick="selectSwatch(this)"></div>
+      </div>
+      <div style="margin-top:32px;">
+        <a href="#contacto" class="btn-dark" style="display:inline-flex;gap:10px;align-items:center;">Diseñar mi Ramo →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section section-dark" id="nosotros">
+  <div style="max-width:760px;margin:0 auto;text-align:center;" class="reveal">
+    <div class="section-eyebrow" style="color:var(--rose);justify-content:center;">Nuestra Historia</div>
+    <h2 class="section-title" style="color:white;margin-top:16px;">Arte Floral con<br><em style="color:var(--rose);">Alma Mexicana</em></h2>
+    <p style="font-size:14px;color:rgba(255,255,255,0.5);line-height:1.9;margin:24px auto 0;max-width:560px;">Desde 2013 transformamos momentos ordinarios en recuerdos extraordinarios. Cada arreglo nace del sueño de nuestra fundadora María González, quien creció rodeada de los jardines de Oaxaca.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,2.5vw,30px);margin-top:64px;">
+    <div class="reveal d1" style="text-align:center;padding:36px 24px;background:rgba(255,255,255,0.04);border-radius:var(--radius);border:1px solid rgba(255,255,255,0.07);transition:all .4s var(--ease-spring);" onmouseenter="this.style.background='rgba(201,139,120,0.12)'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'">
+      <div style="font-size:36px;margin-bottom:14px;">🌿</div>
+      <h3 style="font-family:var(--font-serif);font-size:20px;font-weight:400;color:white;margin-bottom:10px;">Sostenibilidad</h3>
+      <p style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.8;">Cultivadores locales y materiales 100% ecológicos para reducir nuestra huella ambiental.</p>
+    </div>
+    <div class="reveal d2" style="text-align:center;padding:36px 24px;background:rgba(255,255,255,0.04);border-radius:var(--radius);border:1px solid rgba(255,255,255,0.07);transition:all .4s var(--ease-spring);" onmouseenter="this.style.background='rgba(201,139,120,0.12)'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'">
+      <div style="font-size:36px;margin-bottom:14px;">✂️</div>
+      <h3 style="font-family:var(--font-serif);font-size:20px;font-weight:400;color:white;margin-bottom:10px;">Artesanía</h3>
+      <p style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.8;">Cada arreglo creado a mano por floristas expertos con atención meticulosa al detalle.</p>
+    </div>
+    <div class="reveal d3" style="text-align:center;padding:36px 24px;background:rgba(255,255,255,0.04);border-radius:var(--radius);border:1px solid rgba(255,255,255,0.07);transition:all .4s var(--ease-spring);" onmouseenter="this.style.background='rgba(201,139,120,0.12)'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'">
+      <div style="font-size:36px;margin-bottom:14px;">💝</div>
+      <h3 style="font-family:var(--font-serif);font-size:20px;font-weight:400;color:white;margin-bottom:10px;">Amor</h3>
+      <p style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.8;">Ponemos el corazón en cada creación, acompañando los momentos más importantes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section section-alt">
+  <div class="section-header">
+    <div class="reveal">
+      <div class="section-eyebrow">Reseñas</div>
+      <h2 class="section-title">Lo que dicen <em>nuestras</em><br>clientas</h2>
+    </div>
+    <div class="reveal d2" style="display:flex;align-items:center;gap:10px;">
+      <span style="font-family:var(--font-serif);font-size:42px;font-weight:400;color:var(--dark);">4.9</span>
+      <div><div style="color:#F0B94A;font-size:18px;">★★★★★</div><div style="font-size:11px;color:var(--light);">+2,400 reseñas</div></div>
+    </div>
+  </div>
+  <div class="testimonials-grid">
+    <div class="testimonial-card reveal d1">
+      <div class="t-quote">"</div>
+      <p class="t-text">Las flores más hermosas que he visto. El servicio es excepcional y la calidad supera cualquier expectativa. Siempre pido aquí para ocasiones especiales.</p>
+      <div class="t-author">
+        <div class="t-avatar"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80" alt="Valentina R." loading="lazy"></div>
+        <div><div class="t-name">Valentina R.</div><div class="t-loc">Ciudad de México</div><div class="t-stars">★★★★★</div></div>
+      </div>
+    </div>
+    <div class="testimonial-card reveal d2">
+      <div class="t-quote">"</div>
+      <p class="t-text">Pedí el bouquet personalizado para mi boda y fue exactamente lo que soñé. María es una artista. Gracias Fleur por hacer mi día tan especial y mágico.</p>
+      <div class="t-author">
+        <div class="t-avatar"><img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80" alt="Camila T." loading="lazy"></div>
+        <div><div class="t-name">Camila T.</div><div class="t-loc">Guadalajara</div><div class="t-stars">★★★★★</div></div>
+      </div>
+    </div>
+    <div class="testimonial-card reveal d3">
+      <div class="t-quote">"</div>
+      <p class="t-text">El servicio de entrega es increíblemente puntual. Las flores llegaron frescas y la presentación era perfecta. ¡Mi mamá no podía creer lo hermosas que eran!</p>
+      <div class="t-author">
+        <div class="t-avatar"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&q=80" alt="Isabella M." loading="lazy"></div>
+        <div><div class="t-name">Isabella M.</div><div class="t-loc">Monterrey</div><div class="t-stars">★★★★★</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="section" id="contacto">
+  <div class="section-header">
+    <div class="reveal">
+      <div class="section-eyebrow">Hablemos</div>
+      <h2 class="section-title">Contacto &<br><em>Pedidos</em></h2>
+      <p class="section-subtitle">Estamos aquí para hacer realidad tu visión floral</p>
+    </div>
+  </div>
+  <div class="contact-grid">
+    <form class="contact-form reveal-left" id="contactForm" onsubmit="handleFormSubmit(event)" novalidate>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre *</label>
+          <input type="text" class="form-input" id="fieldNombre" placeholder="Tu nombre" required oninput="clearError(this)">
+          <span class="form-error" id="errNombre">Solo letras, mínimo 2 caracteres</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apellido</label>
+          <input type="text" class="form-input" id="fieldApellido" placeholder="Tu apellido" oninput="clearError(this)">
+          <span class="form-error" id="errApellido">Solo letras permitidas</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono *</label>
+        <input type="tel" class="form-input" id="fieldTelefono" placeholder="Ej: 5512345678 (10 dígitos)" required oninput="formatPhone(this)" maxlength="15">
+        <span class="form-error" id="errTelefono">Ingresa un número válido (10 dígitos)</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input type="email" class="form-input" id="fieldEmail" placeholder="tu@email.com" required oninput="clearError(this)">
+        <span class="form-error" id="errEmail">Ingresa un email válido (ej: nombre@dominio.com)</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Asunto</label>
+        <select class="form-input" id="fieldAsunto">
+          <option>Pedido personalizado</option>
+          <option>Bodas y eventos</option>
+          <option>Soporte de pedido</option>
+          <option>Colaboraciones</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mensaje *</label>
+        <textarea class="form-input" id="fieldMensaje" placeholder="Cuéntanos sobre tu evento o ramo soñado..." required oninput="clearError(this)"></textarea>
+        <span class="form-error" id="errMensaje">El mensaje debe tener al menos 20 caracteres</span>
+      </div>
+      <button type="submit" class="btn-dark" style="align-self:flex-start;">Enviar Mensaje →</button>
+    </form>
+    <div class="reveal-right">
+      <div class="contact-info">
+        <div class="contact-info-item">
+          <div class="contact-icon">📍</div>
+          <div class="contact-icon-text"><h4>Ubicación</h4><p>Colonia Roma Norte,<br>Ciudad de México, México</p></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-icon">📞</div>
+          <div class="contact-icon-text"><h4>Teléfono</h4><p>+52 55 1234 5678<br>Lun–Sáb · 9am–8pm</p></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-icon">✉️</div>
+          <div class="contact-icon-text"><h4>Email</h4><p>hola@fleur.mx<br>pedidos@fleur.mx</p></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-icon">🚀</div>
+          <div class="contact-icon-text"><h4>Envío Express</h4><p>Entrega el mismo día en CDMX<br>Pedidos antes de las 3pm</p></div>
+        </div>
+      </div>
+      <div class="newsletter-box">
+        <h3>Suscríbete</h3>
+        <p>Recibe ofertas exclusivas, inspiración floral y novedades de temporada.</p>
+        <div class="newsletter-row">
+          <input type="email" class="newsletter-input" id="newsletterInput" placeholder="tu@email.com">
+          <button class="btn-subscribe" onclick="subscribeNewsletter()">Unirme</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="logo">🌸 Fleur</div>
+      <p>Creando momentos florales únicos desde 2013. Cada arreglo es una obra de arte hecha con amor y pasión.</p>
+      <div class="footer-social">
+        <a href="#" class="social-btn" aria-label="Instagram">📷</a>
+        <a href="#" class="social-btn" aria-label="Facebook">📘</a>
+        <a href="#" class="social-btn" aria-label="Pinterest">📌</a>
+        <a href="#" class="social-btn" aria-label="TikTok">🎵</a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Menú</h4>
+      <a href="#categorias">Colección</a>
+      <a href="#productos">Bouquets</a>
+      <a href="#personalizar">Personalizar</a>
+      <a href="#nosotros">Nosotros</a>
+      <a href="#contacto">Contacto</a>
+    </div>
+    <div class="footer-col">
+      <h4>Ayuda</h4>
+      <a href="#">Preguntas Frecuentes</a>
+      <a href="#">Política de Devoluciones</a>
+      <a href="#">Rastrear Pedido</a>
+      <a href="#">Términos y Condiciones</a>
+      <a href="#">Privacidad</a>
+    </div>
+    <div class="footer-col">
+      <h4>Contacto</h4>
+      <a href="#">📍 Colonia Roma, CDMX</a>
+      <a href="#">📞 +52 55 1234 5678</a>
+      <a href="#">✉️ hola@fleur.mx</a>
+      <a href="#">⏰ Lun–Sáb 9am–8pm</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 Fleur Florería. Todos los derechos reservados.</span>
+    <span>Hecho con 🌸 en CDMX</span>
+  </div>
+</footer>
+
+<script>
+/* ============================
+   PRODUCT DATA
+============================ */
+const allProducts = [
+  { id:'p1', name:'Bouquet Azul y Blanco', price:380, img:'https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=300&q=80', tag:'NUEVO', cat:['ramos'], rating:'4.9', reviews:248 },
+  { id:'p2', name:'Ramos Rosas Reales', price:520, img:'https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=300&q=80', tag:'−20%', cat:['ramos','floreros'], rating:'4.8', reviews:192 },
+  { id:'p3', name:'Canasta con Flores', price:620, img:'https://www.yaakunflores.com/uploads/arreglos/canasta-de-100-rosas-tonos-rosas-con-guia.jpg', tag:'TOP', cat:['ramos'], rating:'5.0', reviews:89 },
+  { id:'p4', name:'Peonías Silvestres', price:640, img:'https://cdn0.ecologiaverde.com/es/posts/3/6/1/peonias_como_cuidarlas_y_su_significado_2163_600.jpg', tag:'LIMITADO', cat:['ramos','estacional'], rating:'4.9', reviews:156 },
+  { id:'p5', name:'Florero de Cristal', price:450, img:'https://m.media-amazon.com/images/I/61gYBQ1YFhL._AC_UF894,1000_QL80_.jpg', tag:'NUEVO', cat:['floreros'], rating:'4.7', reviews:64 },
+  { id:'p6', name:'Orquídea Blanca', price:380, img:'https://verbenaflores.com/cdn/shop/files/verbena-orquidea-blanca-maceta-blanca.jpg?v=1770441565&width=1445', tag:'TOP', cat:['orquideas'], rating:'4.8', reviews:201 },
+  { id:'p7', name:'Orquídea Phalaenopsis', price:490, img:'https://images.unsplash.com/photo-1585631904378-1a1cdb91ae01?w=300&q=80', tag:'PREMIUM', cat:['orquideas'], rating:'4.9', reviews:118 },
+  { id:'p8', name:'Ramo Estacional Otoño', price:340, img:'https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?w=300&q=80', tag:'TEMPORADA', cat:['estacional'], rating:'4.6', reviews:73 },
+  { id:'p9', name:'Florero Arreglo Mixto', price:520, img:'https://images.unsplash.com/photo-1455582916367-25f75bfc6710?w=300&q=80', tag:'POPULAR', cat:['floreros'], rating:'4.7', reviews:95 },
+  { id:'p10', name:'Bouquet de Lavanda', price:290, img:'https://images.unsplash.com/photo-1471086569966-db3eebc25a59?w=300&q=80', tag:'NUEVO', cat:['ramos','estacional'], rating:'4.8', reviews:143 },
+  { id:'p11', name:'Girasoles del Campo', price:260, img:'https://images.unsplash.com/photo-1471197347700-6e6c284ab2c3?w=300&q=80', tag:'FAVORITO', cat:['ramos','estacional'], rating:'4.9', reviews:312 },
+  { id:'p12', name:'Orquídea Dendrobium', price:430, img:'https://images.unsplash.com/photo-1600411832435-53e5f6a9ed5e?w=300&q=80', tag:'EXCLUSIVO', cat:['orquideas'], rating:'4.8', reviews:87 },
+];
+
+const catData = {
+  ramos: { title:'Ramos de Mano', subtitle:'32 arreglos disponibles · Bouquets artesanales frescos' },
+  floreros: { title:'Floreros', subtitle:'18 arreglos disponibles · Elegantes composiciones en florero' },
+  orquideas: { title:'Orquídeas', subtitle:'24 arreglos disponibles · La elegancia tropical' },
+  estacional: { title:'Estacional', subtitle:'15 arreglos disponibles · Lo mejor de la temporada' },
+};
+
+/* ============================
+   CART STATE
+============================ */
+let cart = [];
+let favorites = [];
+
+function addToCart(product) {
+  const existing = cart.find(i => i.id === product.id);
+  if (existing) {
+    existing.qty++;
+    showToast('🛒 Cantidad actualizada');
+  } else {
+    cart.push({ ...product, qty: 1 });
+    showToast('🛒 Añadido al carrito');
+  }
+  updateCartUI();
+  // Briefly open cart
+  openCart();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(i => i.id !== id);
+  updateCartUI();
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) {
+    cart = cart.filter(i => i.id !== id);
+  }
+  updateCartUI();
+}
+
+function updateCartUI() {
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const count = cart.reduce((s, i) => s + i.qty, 0);
+  
+  document.getElementById('cartBadge').textContent = count;
+  document.getElementById('cartBadge').style.display = count > 0 ? 'flex' : 'none';
+  document.getElementById('cartItemCount').textContent = count + (count === 1 ? ' artículo' : ' artículos');
+
+  const cartEmpty = document.getElementById('cartEmpty');
+  const cartItems = document.getElementById('cartItems');
+  const cartFooter = document.getElementById('cartFooter');
+
+  if (cart.length === 0) {
+    cartEmpty.style.display = 'flex';
+    cartItems.innerHTML = '';
+    cartFooter.style.display = 'none';
+    return;
+  }
+
+  cartEmpty.style.display = 'none';
+  cartFooter.style.display = 'block';
+
+  cartItems.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-img"><img src="${item.img}" alt="${item.name}"></div>
+      <div class="cart-item-info">
+        <h5>${item.name}</h5>
+        <p>Entrega: Mismo día CDMX</p>
+        <div class="cart-item-price">$${(item.price * item.qty).toLocaleString()} MXN</div>
+        <div class="cart-item-controls">
+          <button class="qty-btn" onclick="changeQty('${item.id}',-1)">−</button>
+          <span class="qty-num">${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty('${item.id}',1)">+</button>
+        </div>
+      </div>
+      <button class="cart-item-remove" onclick="removeFromCart('${item.id}')" title="Eliminar">✕</button>
+    </div>
+  `).join('');
+
+  const shipping = total >= 500 ? 0 : 80;
+  const grandTotal = total + shipping;
+
+  document.getElementById('cartSubtotal').textContent = '$' + total.toLocaleString() + ' MXN';
+  document.getElementById('cartShipping').textContent = shipping === 0 ? '¡Gratis!' : '$' + shipping + ' MXN';
+  document.getElementById('cartTotal').textContent = '$' + grandTotal.toLocaleString() + ' MXN';
+
+  const msg = document.getElementById('cartShippingMsg');
+  if (total >= 500) {
+    msg.innerHTML = '🎉 ¡Felicidades! Tu pedido tiene <strong>envío gratis</strong>';
+    msg.style.background = 'rgba(157,168,130,0.15)';
+  } else {
+    const diff = 500 - total;
+    msg.innerHTML = `🚚 Agrega <strong>$${diff} MXN</strong> más para obtener <strong>envío gratis</strong>`;
+    msg.style.background = 'rgba(201,139,120,0.1)';
+  }
+}
+
+function openCart() {
+  document.getElementById('cartPanel').classList.add('open');
+  document.getElementById('cartOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCart() {
+  document.getElementById('cartPanel').classList.remove('open');
+  document.getElementById('cartOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function checkout() {
+  if (cart.length === 0) return;
+  showToast('💳 Procesando tu pedido...');
+  setTimeout(() => {
+    cart = [];
+    updateCartUI();
+    closeCart();
+    showToast('🎉 ¡Pedido realizado con éxito!');
+  }, 1500);
+}
+
+/* ============================
+   FAVORITES
+============================ */
+function addToFav(product) {
+  if (favorites.find(f => f.id === product.id)) {
+    showToast('💛 Ya está en favoritos');
+    return;
+  }
+  favorites.push(product);
+  updateFavUI();
+  showToast('❤️ Añadido a favoritos');
+}
+
+function removeFromFav(id) {
+  favorites = favorites.filter(f => f.id !== id);
+  updateFavUI();
+  showToast('🗑️ Eliminado de favoritos');
+}
+
+function updateFavUI() {
+  const count = favorites.length;
+  const badge = document.getElementById('favBadge');
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'flex' : 'none';
+
+  const favEmpty = document.getElementById('favEmpty');
+  const favItems = document.getElementById('favItems');
+
+  if (favorites.length === 0) {
+    favEmpty.style.display = 'flex';
+    favItems.innerHTML = '';
+    return;
+  }
+  favEmpty.style.display = 'none';
+  favItems.innerHTML = favorites.map(f => `
+    <div class="fav-card">
+      <div class="fav-card-img">
+        <img src="${f.img}" alt="${f.name}">
+      </div>
+      <div class="fav-card-info">
+        <h5>${f.name}</h5>
+        <p>$${f.price} MXN</p>
+        <div class="fav-card-actions">
+          <button class="fav-card-btn fav-add-cart" onclick="addToCart({id:'${f.id}',name:'${f.name}',price:${f.price},img:'${f.img}'})">Al carrito</button>
+          <button class="fav-card-btn fav-remove" onclick="removeFromFav('${f.id}')">✕</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openFavPanel() {
+  document.getElementById('favPanel').classList.add('open');
+  document.getElementById('cartOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeFavPanel() {
+  document.getElementById('favPanel').classList.remove('open');
+  document.getElementById('cartOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Close fav when overlay clicked
+document.getElementById('cartOverlay').addEventListener('click', function(e) {
+  if (document.getElementById('favPanel').classList.contains('open')) {
+    closeFavPanel();
+  } else {
+    closeCart();
+  }
+});
+
+/* ============================
+   SEARCH
+============================ */
+function openSearch() {
+  document.getElementById('searchOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('searchInput').focus(), 100);
+  renderSearchResults('');
+}
+function closeSearch() {
+  document.getElementById('searchOverlay').classList.remove('open');
+  document.getElementById('searchInput').value = '';
+}
+function closeSearchOnBackdrop(e) {
+  if (e.target === document.getElementById('searchOverlay')) closeSearch();
+}
+function quickSearch(term) {
+  document.getElementById('searchInput').value = term;
+  handleSearch(term);
+}
+function handleSearch(q) {
+  q = q.trim().toLowerCase();
+  renderSearchResults(q);
+}
+function renderSearchResults(q) {
+  const label = document.getElementById('searchResultLabel');
+  const container = document.getElementById('searchResults');
+  
+  let results = q
+    ? allProducts.filter(p => p.name.toLowerCase().includes(q) || p.cat.some(c => c.includes(q)))
+    : allProducts.slice(0, 6);
+
+  label.textContent = q ? `Resultados para "${q}"` : 'Sugerencias';
+
+  if (results.length === 0) {
+    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--light);padding:24px;font-size:13px;">No encontramos resultados. Intenta con otro término.</div>';
+    return;
+  }
+
+  container.innerHTML = results.slice(0, 6).map(p => `
+    <div class="search-result-item" onclick="addToCart({id:'${p.id}',name:'${p.name}',price:${p.price},img:'${p.img}'});closeSearch();">
+      <div class="search-result-img"><img src="${p.img}" alt="${p.name}"></div>
+      <div class="search-result-info">
+        <h5>${p.name}</h5>
+        <p>$${p.price} MXN</p>
+        <div style="font-size:10px;color:var(--light);margin-top:2px;">⭐ ${p.rating} · ${p.reviews} reseñas</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeSearch();
+    closeCatModal();
+  }
+});
+
+/* ============================
+   CATEGORY MODAL
+============================ */
+function openCatModal(cat) {
+  const data = catData[cat];
+  document.getElementById('catModalTitle').textContent = data.title;
+  document.getElementById('catModalSubtitle').textContent = data.subtitle;
+  
+  const products = allProducts.filter(p => p.cat.includes(cat));
+  document.getElementById('catModalGrid').innerHTML = products.map(p => `
+    <div class="cat-product-card">
+      <div class="cat-product-img">
+        <img src="${p.img}" alt="${p.name}" loading="lazy">
+        <div class="cat-product-tag">${p.tag}</div>
+      </div>
+      <div class="cat-product-info">
+        <h5>${p.name}</h5>
+        <div class="price">$${p.price} MXN</div>
+        <div class="rating"><span class="stars">★★★★★</span> ${p.rating} · ${p.reviews} reseñas</div>
+        <div class="cat-product-actions">
+          <button class="cat-btn-fav" onclick="addToFav({id:'${p.id}',name:'${p.name}',price:${p.price},img:'${p.img}'})">🤍 Guardar</button>
+          <button class="cat-btn-cart" onclick="addToCart({id:'${p.id}',name:'${p.name}',price:${p.price},img:'${p.img}'});closeCatModal();">Al carrito</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('catModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCatModal() {
+  document.getElementById('catModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeCatModalOnBackdrop(e) {
+  if (e.target === document.getElementById('catModal')) closeCatModal();
+}
+
+/* ============================
+   VIDEO
+============================ */
+let videoPlaying = true;
+function toggleVideo() {
+  window.open('https://www.youtube.com/watch?v=9DDeSUxcTIY', '_blank', 'noopener');
+  const icon = document.getElementById('playIcon');
+  const text = document.getElementById('playBtnText');
+  if (icon) icon.textContent = '▶';
+  if (text) text.textContent = 'Ver en YouTube';
+}
+
+/* ============================
+   CAROUSEL
+============================ */
+let currentSlide = 0;
+const totalSlides = 3;
+let carouselTimer;
+
+function goSlide(n) {
+  const slides = document.querySelectorAll('.hero-slide');
+  const dots = document.querySelectorAll('#carouselDots .dot');
+  slides[currentSlide].classList.remove('active');
+  dots[currentSlide].classList.remove('active');
+  currentSlide = (n + totalSlides) % totalSlides;
+  slides[currentSlide].classList.add('active');
+  dots[currentSlide].classList.add('active');
+}
+function nextSlide() { goSlide(currentSlide + 1); resetTimer(); }
+function prevSlide() { goSlide(currentSlide - 1); resetTimer(); }
+function resetTimer() {
+  clearInterval(carouselTimer);
+  carouselTimer = setInterval(nextSlide, 5000);
+}
+carouselTimer = setInterval(nextSlide, 5000);
+
+/* ============================
+   NAVBAR SCROLL
+============================ */
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+/* ============================
+   HAMBURGER
+============================ */
+function toggleMenu() {
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+function closeMenu() {
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('mobileMenu').classList.remove('open');
+}
+document.querySelectorAll('.mobile-menu a[href^="#"]').forEach(a => {
+  a.addEventListener('click', closeMenu);
+});
+
+/* ============================
+   REVEAL OBSERVER
+============================ */
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => revealObserver.observe(el));
+
+/* ============================
+   PARALLAX
+============================ */
+window.addEventListener('scroll', () => {
+  const bg = document.getElementById('heroBg');
+  if (bg) bg.style.transform = `translateY(${window.scrollY * 0.3}px)`;
+});
+
+/* ============================
+   TOAST
+============================ */
+let toastTimer;
+function showToast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<span class="toast-icon">🌸</span>${msg}`;
+  document.body.appendChild(toast);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.remove(), 3200);
+}
+
+/* ============================
+   SWATCHES
+============================ */
+function selectSwatch(el) {
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  showToast('🎨 Color seleccionado: ' + el.title);
+}
+
+/* ============================
+   PETALS
+============================ */
+function createPetal() {
+  const petal = document.createElement('div');
+  petal.className = 'petal';
+  const size = Math.random() * 9 + 5;
+  petal.style.cssText = `left:${Math.random()*100}vw;top:0;width:${size}px;height:${size}px;opacity:${Math.random()*0.5+0.15};animation-duration:${Math.random()*5+7}s;animation-delay:${Math.random()*2}s;background:${['#EFC5C5','#E0A8A8','#C5BDD8','#F5DDD8','#EDE5DC'][Math.floor(Math.random()*5)]};border-radius:${Math.random()>0.5?'50% 0 50% 0':'0 50% 0 50%'};z-index:1;pointer-events:none;position:fixed;`;
+  document.body.appendChild(petal);
+  const dur = parseFloat(petal.style.animationDuration)*1000;
+  const delay = parseFloat(petal.style.animationDelay)*1000;
+  setTimeout(() => petal.remove(), dur + delay + 500);
+}
+setInterval(createPetal, 1800);
+
+/* ============================
+   SMOOTH SCROLL
+============================ */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+/* ============================
+   FORM VALIDATION
+============================ */
+function clearError(input) {
+  input.classList.remove('error');
+  const errId = 'err' + input.id.replace('field', '');
+  const errEl = document.getElementById(errId);
+  if (errEl) errEl.classList.remove('show');
+}
+
+function formatPhone(input) {
+  // Allow only numbers, spaces, + and -
+  let val = input.value.replace(/[^\d\s+\-]/g, '');
+  input.value = val;
+  clearError(input);
+}
+
+function showError(fieldId, errId) {
+  const field = document.getElementById(fieldId);
+  const err = document.getElementById(errId);
+  if (field) field.classList.add('error');
+  if (err) err.classList.add('show');
+}
+
+function validateForm() {
+  let valid = true;
+
+  // Nombre: solo letras, min 2
+  const nombre = document.getElementById('fieldNombre').value.trim();
+  if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{2,}$/.test(nombre)) {
+    showError('fieldNombre', 'errNombre');
+    valid = false;
+  }
+
+  // Apellido: solo letras (opcional pero si tiene, válido)
+  const apellido = document.getElementById('fieldApellido').value.trim();
+  if (apellido && !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(apellido)) {
+    showError('fieldApellido', 'errApellido');
+    valid = false;
+  }
+
+  // Teléfono: 10 dígitos
+  const tel = document.getElementById('fieldTelefono').value.replace(/[\s\-+]/g, '');
+  if (!/^\d{10}$/.test(tel)) {
+    showError('fieldTelefono', 'errTelefono');
+    valid = false;
+  }
+
+  // Email: formato válido
+  const email = document.getElementById('fieldEmail').value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    showError('fieldEmail', 'errEmail');
+    valid = false;
+  }
+
+  // Mensaje: mínimo 20 chars
+  const msg = document.getElementById('fieldMensaje').value.trim();
+  if (msg.length < 20) {
+    showError('fieldMensaje', 'errMensaje');
+    valid = false;
+  }
+
+  return valid;
+}
+
+function handleFormSubmit(e) {
+  e.preventDefault();
+  if (!validateForm()) {
+    showToast('⚠️ Por favor revisa los campos marcados');
+    return;
+  }
+  // Mark all inputs as success
+  ['fieldNombre','fieldApellido','fieldTelefono','fieldEmail','fieldMensaje'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.value.trim()) el.classList.add('success');
+  });
+  showToast('✉️ ¡Mensaje enviado! Te contactaremos pronto.');
+  setTimeout(() => {
+    e.target.reset();
+    document.querySelectorAll('.form-input').forEach(el => el.classList.remove('success', 'error'));
+    document.querySelectorAll('.form-error').forEach(el => el.classList.remove('show'));
+  }, 1000);
+}
+
+function subscribeNewsletter() {
+  const input = document.getElementById('newsletterInput');
+  const val = input.value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val)) {
+    input.style.borderColor = '#E07070';
+    showToast('⚠️ Ingresa un email válido');
+    return;
+  }
+  input.style.borderColor = 'var(--olive)';
+  showToast('🎉 ¡Bienvenida a Fleur!');
+  input.value = '';
+  setTimeout(() => input.style.borderColor = '', 2000);
+}
+
+// Init badge display
+updateCartUI();
+updateFavUI();
+</script>
+<script>window.FLEUR_API_URL = 'http://localhost:4000';</script>
+<script src="http://localhost:4000/fleur-api.js"></script>
+<script src="http://localhost:4000/fleur-ui.js"></script>   <!-- ← nueva -->
+</body>
+</html>
