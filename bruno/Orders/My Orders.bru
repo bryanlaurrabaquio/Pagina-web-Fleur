@@ -1,0 +1,15 @@
+meta {
+  name: My Orders
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/orders/my-orders
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

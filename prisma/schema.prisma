@@ -1,0 +1,227 @@
+// ===========================================
+//  FLEUR — Prisma Schema (PostgreSQL)
+// ===========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------- ENUMS --------
+enum Role {
+  admin
+  cliente
+}
+
+enum OrderStatus {
+  pendiente
+  pagado
+  preparando
+  enviado
+  entregado
+  cancelado
+}
+
+enum PaymentStatus {
+  pendiente
+  aprobado
+  rechazado
+}
+
+// -------- MODELOS --------
+
+model User {
+  id        Int        @id @default(autoincrement())
+  name      String
+  email     String     @unique
+  password  String
+  role      Role       @default(cliente)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  cart      Cart?
+  favorites Favorite[]
+  orders    Order[]
+
+  @@map("users")
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          Int        @id @default(autoincrement())
+  sku         String     @unique // identificador estable usado por el frontend (p1, p2, ...)
+  name        String
+  slug        String     @unique
+  description String?
+  price       Float                       // precio normal
+  oldPrice    Float?                      // precio anterior (para descuentos)
+  image       String?
+  tag         String?                     // NUEVO, TOP, -20%, etc.
+  stock       Int        @default(0)
+  rating      Float      @default(0)
+  reviews     Int        @default(0)
+  featured    Boolean    @default(false)  // destacado
+  discount    Boolean    @default(false)  // con descuento
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  categoryId  Int?
+  category    Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  cartItems   CartItem[]
+  favorites   Favorite[]
+  orderItems  OrderItem[]
+
+  @@index([categoryId])
+  @@map("products")
+}
+
+model Cart {
+  id        Int        @id @default(autoincrement())
+  userId    Int        @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cartId    Int
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@map("favorites")
+}
+
+model Order {
+  id            Int           @id @default(autoincrement())
+  userId        Int
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status        OrderStatus   @default(pendiente) // estado logístico del pedido
+  paymentStatus PaymentStatus @default(pendiente) // estado del pago (separado del logístico)
+
+  // Datos de entrega
+  deliveryName    String?     // nombre de quien recibe
+  deliveryPhone   String?     // teléfono de contacto para la entrega
+  deliveryAddress String      // dirección de entrega
+  deliveryDate    DateTime?
+  deliveryTime    String?
+  cardMessage     String?     // mensaje personalizado para tarjeta floral
+
+  // Totales (calculados SIEMPRE en el backend con precios de la BD)
+  subtotal      Float
+  shippingCost  Float
+  total         Float
+
+  items         OrderItem[]
+  payment       Payment?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  // Snapshot del producto al momento de la compra
+  name      String
+  image     String?
+  price     Float
+  quantity  Int
+
+  @@map("order_items")
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  createdAt DateTime @default(now())
+
+  @@map("contact_messages")
+}
+
+model NewsletterSubscriber {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("newsletter_subscribers")
+}
+
+model Payment {
+  id                      Int           @id @default(autoincrement())
+  orderId                 Int           @unique
+  order                   Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider                String        @default("mock") // mock | stripe | mercadopago
+  status                  PaymentStatus @default(pendiente)
+  amount                  Float
+  currency                String        @default("MXN")
+
+  // Identificadores del proveedor de pago
+  externalPaymentId       String?       // payment_intent (Stripe) / payment id (Mercado Pago)
+  stripeSessionId         String?       // id de la sesión de Stripe Checkout
+  mercadoPagoPreferenceId String?       // id de la preferencia de Mercado Pago
+  rawResponse             Json?         // respuesta cruda del proveedor/webhook (auditoría)
+
+  // Conservados para el flujo mock actual (no romper pagos existentes)
+  sessionId               String?       // id de sesión genérico del mock
+  reference               String?       // referencia interna
+
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  @@index([provider])
+  @@index([status])
+  @@map("payments")
+}

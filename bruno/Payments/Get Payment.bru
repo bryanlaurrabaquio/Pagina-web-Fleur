@@ -1,0 +1,15 @@
+meta {
+  name: Get Payment
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/payments/{{orderId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

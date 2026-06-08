@@ -1,0 +1,31 @@
+meta {
+  name: Create Order
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/orders
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "address": "Roma Norte 123, CDMX",
+    "deliveryName": "Ana López",
+    "deliveryPhone": "5512345678",
+    "deliveryTime": "12:00 - 15:00",
+    "cardMessage": "¡Feliz cumpleaños!"
+  }
+}
+
+script:post-response {
+  if (res.body && res.body.data && res.body.data.id) {
+    bru.setEnvVar("orderId", res.body.data.id);
+  }
+}

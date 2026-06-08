@@ -1,0 +1,27 @@
+meta {
+  name: Create Checkout
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/payments/create-checkout
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "orderId": {{orderId}}
+  }
+}
+
+script:post-response {
+  if (res.body && res.body.data && res.body.data.sessionId) {
+    bru.setEnvVar("sessionId", res.body.data.sessionId);
+  }
+}

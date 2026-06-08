@@ -1,0 +1,20 @@
+meta {
+  name: Orders
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/admin/orders?limit=50
+  body: none
+  auth: bearer
+}
+
+params:query {
+  limit: 50
+  ~status: pendiente
+}
+
+auth:bearer {
+  token: {{token}}
+}

@@ -1,0 +1,21 @@
+meta {
+  name: Update Order Status
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/admin/orders/{{orderId}}/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "status": "preparando"
+  }
+}
